@@ -39,10 +39,15 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/google-adsense', "@nuxt/icon", "@pinia/nuxt", "@nuxtjs/color-mode", "@nuxtjs/tailwindcss", "pinia-plugin-persistedstate/nuxt", "nuxt-codemirror", "@vueuse/nuxt", "nuxt-gtag"],
 
   nitro: {
-    preset: 'cloudflare-pages',
+    preset: 'cloudflare_pages',
     cloudflare: {
+      deployConfig: true,
       nodeCompat: true
-    }
+    },
+  },
+
+  routeRules: {
+    '/api/**': { cors: true }
   },
 
   experimental: {
