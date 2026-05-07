@@ -39,4 +39,10 @@ export default defineNuxtConfig({
   },
 
   modules: ['@nuxtjs/google-adsense', "@nuxt/icon", "@pinia/nuxt", "@nuxtjs/color-mode", "@nuxtjs/tailwindcss", "pinia-plugin-persistedstate/nuxt", "nuxt-codemirror", "@vueuse/nuxt", "nuxt-gtag"],
+
+  vite: {
+    optimizeDeps: {
+      exclude: ['brotli-wasm']
+    }
+  }
 });
