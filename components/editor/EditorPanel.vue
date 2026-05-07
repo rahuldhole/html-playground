@@ -1,7 +1,7 @@
 <template>
   <div id="editor-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 transition-all duration-300 relative">
     <!-- Ultra Minimal Header -->
-    <div class="group/header relative z-20 flex items-center justify-between px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950 rounded-t-2xl">
+    <div class="group/header relative z-20 flex items-center justify-between px-2 md:px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950 rounded-t-2xl">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
           <Icon name="heroicons:code-bracket" class="w-3.5 h-3.5" />
@@ -10,41 +10,83 @@
         
         <!-- Actions -->
         <div class="flex items-center gap-1">
-          <div class="relative">
-            <button @click.stop="showMenuPopup = !showMenuPopup"
-              class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
-              <Icon name="heroicons:squares-plus" class="w-3.5 h-3.5" />
-              <span>Templates</span>
-            </button>
-            <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
-          </div>
+          <!-- Desktop View: Show everything -->
+          <template v-if="!isMobile">
+            <div class="relative">
+              <button @click.stop="showMenuPopup = !showMenuPopup"
+                class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
+                <Icon name="heroicons:squares-plus" class="w-3.5 h-3.5" />
+                <span>Templates</span>
+              </button>
+              <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
+            </div>
 
-          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+            <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
-          <div class="flex items-center gap-0.5">
-            <button @click="handleUndo" title="Undo"
-              class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
-              <Icon name="heroicons:arrow-uturn-left" class="w-3.5 h-3.5" />
-            </button>
-            <button @click="handleRedo" title="Redo"
-              class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
-              <Icon name="heroicons:arrow-uturn-right" class="w-3.5 h-3.5" />
-            </button>
-          </div>
+            <div class="flex items-center gap-0.5">
+              <button @click="handleUndo" title="Undo"
+                class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+                <Icon name="heroicons:arrow-uturn-left" class="w-3.5 h-3.5" />
+              </button>
+              <button @click="handleRedo" title="Redo"
+                class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+                <Icon name="heroicons:arrow-uturn-right" class="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+            <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
-          <div class="flex items-center gap-0.5">
-            <button @click="handleCopy" :title="isCopied ? 'Copied!' : 'Copy All'"
-              class="p-1.5 rounded-md transition-all"
-              :class="isCopied ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'">
-              <Icon :name="copyIcon" class="w-3.5 h-3.5" />
-            </button>
-            <button @click="handleClear" title="Clear Editor"
-              class="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
-              <Icon name="heroicons:trash" class="w-3.5 h-3.5" />
-            </button>
-          </div>
+            <div class="flex items-center gap-0.5">
+              <button @click="handleCopy" :title="isCopied ? 'Copied!' : 'Copy All'"
+                class="p-1.5 rounded-md transition-all"
+                :class="isCopied ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'">
+                <Icon :name="copyIcon" class="w-3.5 h-3.5" />
+              </button>
+              <button @click="handleClear" title="Clear Editor"
+                class="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+                <Icon name="heroicons:trash" class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </template>
+
+          <!-- Mobile View: Show only Templates and a "More" menu if needed, or just More -->
+          <template v-else>
+            <div class="relative">
+              <button @click.stop="showMenuPopup = !showMenuPopup"
+                class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <Icon name="heroicons:squares-plus" class="w-3.5 h-3.5" />
+              </button>
+              <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
+            </div>
+            
+            <div class="relative ml-1">
+              <button @click.stop="showMobileMenu = !showMobileMenu"
+                class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <Icon name="heroicons:bars-3-bottom-right" class="w-4 h-4" />
+              </button>
+              
+              <!-- Mobile Actions Dropdown -->
+              <div v-if="showMobileMenu" class="absolute top-full left-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-1.5 z-50">
+                <button @click="handleUndo(); showMobileMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+                  <Icon name="heroicons:arrow-uturn-left" class="w-3.5 h-3.5" />
+                  <span>Undo</span>
+                </button>
+                <button @click="handleRedo(); showMobileMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+                  <Icon name="heroicons:arrow-uturn-right" class="w-3.5 h-3.5" />
+                  <span>Redo</span>
+                </button>
+                <div class="h-[1px] bg-gray-100 dark:bg-gray-700 my-1 mx-1"></div>
+                <button @click="handleCopy(); showMobileMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+                  <Icon :name="copyIcon" class="w-3.5 h-3.5" />
+                  <span>Copy Code</span>
+                </button>
+                <button @click="handleClear(); showMobileMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[11px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                  <Icon name="heroicons:trash" class="w-3.5 h-3.5" />
+                  <span>Clear Editor</span>
+                </button>
+              </div>
+            </div>
+          </template>
           
           <div v-if="fullScreenStore.isEditorFullscreen" class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
           
@@ -106,7 +148,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { useEventListener, useMagicKeys, useFullscreen, useClipboard } from '@vueuse/core'
+import { useEventListener, useMagicKeys, useFullscreen, useClipboard, useWindowSize } from '@vueuse/core'
 import { undo, redo } from '@codemirror/commands'
 import { useColorMode } from '#imports'
 import { basicSetup } from 'codemirror'
@@ -123,6 +165,11 @@ import { useFullScreenStore } from '~/stores/fullScreenStore'
 // Connect to the store
 const editorStore = useEditorStore()
 const { shareCode, saveCode, runCode, shareButtonText } = useEditor()
+
+// Responsiveness
+const { width: windowWidth } = useWindowSize()
+const isMobile = computed(() => windowWidth.value < 768)
+const showMobileMenu = ref(false)
 
 // Clipboard logic
 const { copy, copied: isCopied, isSupported } = useClipboard({ legacy: true })

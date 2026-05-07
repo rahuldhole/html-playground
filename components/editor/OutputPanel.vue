@@ -1,7 +1,7 @@
 <template>
   <div id="output-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300">
     <!-- Ultra Minimal Header -->
-    <div class="group/header flex items-center justify-between px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950">
+    <div class="group/header flex items-center justify-between px-2 md:px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
           <Icon name="heroicons:globe-alt" class="w-3.5 h-3.5" />
@@ -27,18 +27,41 @@
 
       <!-- Right Actions -->
       <div class="flex items-center gap-1.5">
-        <button @click="toggleOutputTheme"
-          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-          :class="{ 'text-indigo-500': editorStore.isOutputDark }"
-          title="Toggle Force Dark Mode">
-          <Icon :name="editorStore.isOutputDark ? 'heroicons:moon' : 'heroicons:sun'" class="w-4 h-4" />
-        </button>
+        <template v-if="!isMobile">
+          <button @click="toggleOutputTheme"
+            class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            :class="{ 'text-indigo-500': editorStore.isOutputDark }"
+            title="Toggle Force Dark Mode">
+            <Icon :name="editorStore.isOutputDark ? 'heroicons:moon' : 'heroicons:sun'" class="w-4 h-4" />
+          </button>
+          
+          <button @click="takeScreenshot"
+            class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            title="Take Screenshot">
+            <Icon name="heroicons:camera" class="w-4 h-4" />
+          </button>
+        </template>
         
-        <button @click="takeScreenshot"
-          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-          title="Take Screenshot">
-          <Icon name="heroicons:camera" class="w-4 h-4" />
-        </button>
+        <template v-else>
+          <div class="relative">
+            <button @click.stop="showMobileMenu = !showMobileMenu"
+              class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+              <Icon name="heroicons:bars-3-bottom-right" class="w-4 h-4" />
+            </button>
+            
+            <!-- Mobile Actions Dropdown -->
+            <div v-if="showMobileMenu" class="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-1.5 z-50">
+              <button @click="toggleOutputTheme(); showMobileMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+                <Icon :name="editorStore.isOutputDark ? 'heroicons:moon' : 'heroicons:sun'" class="w-4 h-4" />
+                <span>{{ editorStore.isOutputDark ? 'Light' : 'Dark' }} Mode Preview</span>
+              </button>
+              <button @click="takeScreenshot(); showMobileMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+                <Icon name="heroicons:camera" class="w-4 h-4" />
+                <span>Take Screenshot</span>
+              </button>
+            </div>
+          </div>
+        </template>
         
         <button @click="openInNewTab"
           class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
@@ -82,11 +105,16 @@ import html2canvas from 'html2canvas'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'
 import { useFullScreenStore } from '~/stores/fullScreenStore'
-import { useFullscreen } from '@vueuse/core'
+import { useFullscreen, useWindowSize } from '@vueuse/core'
 
 const container = ref<HTMLElement | null>(null)
 const outputFrame = ref<HTMLIFrameElement | null>(null)
 const editorStore = useEditorStore()
+
+// Responsiveness
+const { width: windowWidth } = useWindowSize()
+const isMobile = computed(() => windowWidth.value < 768)
+const showMobileMenu = ref(false)
 
 const { getCodeFromUrl, shareOutput, updateOutput, shareButtonText } = useEditor()
 
