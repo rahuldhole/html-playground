@@ -1,84 +1,61 @@
 <template>
-  <div id="output-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-    <!-- Browser Window Header -->
-    <div class="flex flex-col bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm">
-      <!-- Window Controls & Tabs -->
-      <div class="flex items-center justify-between px-4 py-2">
-        <div class="flex items-center gap-6">
-          <!-- Dots -->
-          <div class="flex gap-1.5">
-            <div class="w-3 h-3 rounded-full bg-red-400"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
-            <div class="w-3 h-3 rounded-full bg-green-400"></div>
-          </div>
-          
-          <div class="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-t-lg border-x border-t border-gray-200 dark:border-gray-700 -mb-[9px] relative z-10">
-            <Icon name="heroicons:globe-alt" class="w-3.5 h-3.5 text-gray-400" />
-            <span class="text-[11px] font-medium text-gray-600 dark:text-gray-300">Live Preview</span>
-            <Icon name="heroicons:x-mark" class="w-3 h-3 text-gray-400 hover:text-gray-600 cursor-pointer" />
-          </div>
+  <div id="output-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300">
+    <!-- Ultra Minimal Header -->
+    <div class="group/header flex items-center justify-between px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
+          <Icon name="heroicons:globe-alt" class="w-3.5 h-3.5" />
+          <span>Preview</span>
         </div>
-
-        <div class="flex items-center gap-2">
+        
+        <!-- Navigation -->
+        <div class="flex items-center gap-1">
           <button @click="handleSwitchToEditor"
-            class="flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold uppercase text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors">
-            <Icon name="heroicons:pencil-square" class="w-3.5 h-3.5" />
-            <span>Editor</span>
+            class="px-2 py-1 rounded-md text-[10px] font-bold uppercase text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+            Editor
           </button>
           
-          <button @click="toggleFullscreenHandler"
-            class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-            <Icon :name="isOutputFullscreen ? 'heroicons:arrows-pointing-in' : 'heroicons:arrows-pointing-out'" class="w-4 h-4" />
-          </button>
+          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+          
+          <div class="flex items-center gap-0.5">
+            <button @click="outputIframe" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Reload Preview">
+              <Icon name="heroicons:arrow-path" class="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Address Bar Area -->
-      <div class="flex items-center gap-3 px-4 py-2 border-t border-gray-200 dark:border-gray-800">
-        <div class="flex items-center gap-2">
-          <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-            <Icon name="heroicons:arrow-left" class="w-4 h-4" />
-          </button>
-          <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-            <Icon name="heroicons:arrow-right" class="w-4 h-4" />
-          </button>
-          <button @click="outputIframe" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-            <Icon name="heroicons:arrow-path" class="w-4 h-4" />
-          </button>
-        </div>
-
-        <!-- URL Bar -->
-        <div class="flex-1 flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-inner">
-          <Icon name="heroicons:lock-closed" class="w-3 h-3 text-green-500" />
-          <span class="text-xs text-gray-400 select-none">localhost:3000/preview</span>
-        </div>
-
-        <div class="flex items-center gap-1.5">
-          <button @click="toggleOutputTheme"
-            class="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all shadow-sm"
-            :class="{ 'bg-gray-800 text-white': editorStore.isOutputDark }"
-            title="Toggle Force Dark Mode">
-            <Icon name="heroicons:moon" class="w-4 h-4" />
-          </button>
-          
-          <button @click="takeScreenshot"
-            class="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all shadow-sm"
-            title="Take Screenshot">
-            <Icon name="heroicons:camera" class="w-4 h-4" />
-          </button>
-          
-          <button @click="openInNewTab"
-            class="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all shadow-sm"
-            title="Open in New Tab">
-            <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
-          </button>
-          
-          <button @click="shareOutput"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 text-xs font-semibold">
-            <Icon name="heroicons:share" class="w-3.5 h-3.5" />
-            <span>Share</span>
-          </button>
-        </div>
+      <!-- Right Actions -->
+      <div class="flex items-center gap-1.5">
+        <button @click="toggleOutputTheme"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+          :class="{ 'text-indigo-500': editorStore.isOutputDark }"
+          title="Toggle Force Dark Mode">
+          <Icon :name="editorStore.isOutputDark ? 'heroicons:moon' : 'heroicons:sun'" class="w-4 h-4" />
+        </button>
+        
+        <button @click="takeScreenshot"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+          title="Take Screenshot">
+          <Icon name="heroicons:camera" class="w-4 h-4" />
+        </button>
+        
+        <button @click="openInNewTab"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+          title="Open in New Tab">
+          <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
+        </button>
+        
+        <button @click="shareOutput"
+          class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm text-[10px] font-bold uppercase">
+          <Icon name="heroicons:share" class="w-3.5 h-3.5" />
+          <span>Share</span>
+        </button>
+        
+        <button @click="toggleFullscreenHandler"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all">
+          <Icon :name="isOutputFullscreen ? 'heroicons:arrows-pointing-in' : 'heroicons:arrows-pointing-out'" class="w-4 h-4" />
+        </button>
       </div>
     </div>
 

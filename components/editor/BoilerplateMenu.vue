@@ -2,7 +2,7 @@
   <div 
     v-if="modelValue" 
     ref="menuRef"
-    class="absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-4 w-64 mt-2"
+    class="absolute top-full left-0 z-50 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 p-4 w-72 mt-2"
   >
     <div class="flex justify-between items-center mb-3">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Boilerplates</h3>
@@ -33,30 +33,27 @@
     <div class="max-h-[300px] overflow-y-auto pr-1">
       <ul v-if="filteredTemplates.length" class="space-y-3">
         <li v-for="template in filteredTemplates" :key="template.id">
-          <a @click.prevent="selectBoilerplate(template.file)" href="#" 
-             class="flex items-center gap-3 p-2 rounded-md text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <!-- <img :src="template.icon" :alt="template.name" class="w-6 h-6 dark:invert" /> -->
-            <!-- if icon then show image if svg then show svg -->
-            <img v-if="template.icon" :src="template.icon" :alt="template.name" class="w-6 h-6 dark:invert" />
-            <span v-else class="w-6 h-6 flex items-center justify-center">
-              <span v-html="template.svg || template.icon"></span>
-            </span>
-            <div class="flex-grow">
-              <div class="font-medium">{{ template.name }}</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ template.description }}</div>
-            </div>
-            <button 
-              @click.stop.prevent="previewBoilerplate(template.file)"
-              title="Preview in new tab"
-              class="text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 p-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
+          <div class="group/item relative flex items-center p-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all">
+            <button @click="selectBoilerplate(template.file)"
+               class="flex-1 flex items-center gap-3 p-2 rounded-md text-left text-gray-800 dark:text-gray-200 transition-colors">
+              <img v-if="template.icon" :src="template.icon" :alt="template.name" class="w-6 h-6 dark:invert shrink-0" />
+              <span v-else class="w-6 h-6 flex items-center justify-center shrink-0">
+                <span v-html="template.svg || template.icon"></span>
+              </span>
+              <div class="flex-grow min-w-0">
+                <div class="font-semibold text-sm truncate">{{ template.name }}</div>
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 truncate">{{ template.description }}</div>
+              </div>
             </button>
-          </a>
+            
+            <button 
+              @click.stop="previewBoilerplate(template.file)"
+              title="Preview in new tab"
+              class="opacity-0 group-hover/item:opacity-100 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-2 transition-all"
+            >
+              <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
+            </button>
+          </div>
         </li>
       </ul>
       <div v-else class="text-center py-4 text-gray-500 dark:text-gray-400">

@@ -1,101 +1,77 @@
 <template>
-  <div id="editor-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-    <!-- Premium Header -->
-    <div class="flex items-center justify-between px-4 py-3 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm">
+  <div id="editor-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 transition-all duration-300 relative">
+    <!-- Ultra Minimal Header -->
+    <div class="group/header relative z-20 flex items-center justify-between px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950 rounded-t-2xl">
       <div class="flex items-center gap-3">
-        <div class="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-          <Icon name="heroicons:code-bracket" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
+          <Icon name="heroicons:code-bracket" class="w-3.5 h-3.5" />
+          <span>Editor</span>
         </div>
-        <h2 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Editor</h2>
         
-        <div class="h-4 w-[1px] bg-gray-200 dark:border-gray-700 mx-1"></div>
-        
-        <div class="relative">
-          <button @click.stop="showMenu"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all shadow-sm">
-            <Icon name="heroicons:squares-plus" class="w-4 h-4" />
-            <span>Boilerplates</span>
+        <!-- Actions -->
+        <div class="flex items-center gap-1">
+          <div class="relative">
+            <button @click.stop="showMenuPopup = !showMenuPopup"
+              class="px-2 py-1 rounded-md text-[10px] font-bold uppercase text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+              Templates
+            </button>
+            <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
+          </div>
+          
+          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+          
+          <button @click="handleSwitchToOutput"
+            class="px-2 py-1 rounded-md text-[10px] font-bold uppercase text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+            Preview
           </button>
-          <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
         </div>
-
-        <button @click="handleSwitchToOutput"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all shadow-sm">
-          <Icon name="heroicons:eye" class="w-4 h-4" />
-          <span>Preview</span>
-        </button>
       </div>
       
-      <div class="flex items-center gap-2">
-        <!-- Live Run Toggle -->
-        <div class="flex items-center gap-2 mr-2 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <span class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Live</span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" v-model="liveRun" class="sr-only peer" />
-            <div class="w-7 h-4 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
-          </label>
+      <!-- Right Actions -->
+      <div class="flex items-center gap-1.5">
+        <!-- Live Indicator (Always semi-visible) -->
+        <div class="flex items-center gap-2 mr-2 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50">
+          <div class="w-1.5 h-1.5 rounded-full" :class="liveRun ? 'bg-green-500 animate-pulse' : 'bg-gray-400'"></div>
+          <span class="text-[9px] font-bold uppercase text-gray-400">Live</span>
         </div>
 
-        <!-- Actions -->
-        <div class="flex items-center gap-1.5">
-          <button @click="runCode" v-show="!liveRun"
-            class="p-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
-            title="Run Code">
-            <Icon name="heroicons:play" class="w-5 h-5" />
-          </button>
-          
-          <button @click="saveCode"
-            class="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
-            title="Save HTML">
-            <Icon name="heroicons:arrow-down-tray" class="w-5 h-5" />
-          </button>
+        <button @click="runCode" v-show="!liveRun"
+          class="p-1.5 rounded-md text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all"
+          title="Run Code">
+          <Icon name="heroicons:play" class="w-4 h-4" />
+        </button>
+        
+        <button @click="saveCode"
+          class="p-1.5 rounded-md text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all"
+          title="Save HTML">
+          <Icon name="heroicons:arrow-down-tray" class="w-4 h-4" />
+        </button>
 
-          <button @click="shareCode"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 text-xs font-semibold">
-            <Icon name="heroicons:share" class="w-4 h-4" />
-            <span>{{ shareButtonText === 'Share' ? 'Share' : shareButtonText }}</span>
-          </button>
+        <button @click="shareCode"
+          class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm text-[10px] font-bold uppercase">
+          <Icon name="heroicons:share" class="w-3.5 h-3.5" />
+          <span>{{ shareButtonText === 'Share' ? 'Share' : shareButtonText }}</span>
+        </button>
 
-          <button @click="toggleFullscreenHandler"
-            class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <Icon :name="fullScreenStore.isEditorFullscreen ? 'heroicons:arrows-pointing-in' : 'heroicons:arrows-pointing-out'" class="w-5 h-5" />
-          </button>
-        </div>
+        <button @click="toggleFullscreenHandler"
+          class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all">
+          <Icon :name="fullScreenStore.isEditorFullscreen ? 'heroicons:arrows-pointing-in' : 'heroicons:arrows-pointing-out'" class="w-4 h-4" />
+        </button>
       </div>
     </div>
     
     <!-- CodeMirror Editor Container -->
     <div
-      class="relative flex-grow overflow-hidden"
+      class="relative flex-grow overflow-hidden bg-white dark:bg-[#282c34] rounded-b-2xl"
       :class="{ 'fixed inset-0 z-50': fullScreenStore.isEditorFullscreen }">
       <ClientOnly>
         <div ref="editorContainer" class="w-full h-full" :class="{'dark-editor': isDarkMode}"></div>
         <template #fallback>
-          <div class="flex items-center justify-center w-full h-full bg-card">
-            <div class="flex flex-col items-center gap-3">
-              <Icon name="heroicons:arrow-path" class="w-8 h-8 text-indigo-500 animate-spin" />
-              <span class="text-sm text-gray-500 font-medium">Initializing Editor...</span>
-            </div>
+          <div class="flex items-center justify-center w-full h-full">
+             <Icon name="heroicons:arrow-path" class="w-5 h-5 text-gray-300 animate-spin" />
           </div>
         </template>
       </ClientOnly>
-    </div>
-
-    <!-- Status Bar -->
-    <div class="px-4 py-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-1.5 text-[10px] font-medium text-gray-500">
-          <Icon name="heroicons:document-text" class="w-3 h-3" />
-          <span>HTML5</span>
-        </div>
-        <div class="flex items-center gap-1.5 text-[10px] font-medium text-gray-500">
-          <Icon name="heroicons:cursor-arrow-rays" class="w-3 h-3" />
-          <span>Live Preview: {{ liveRun ? 'ON' : 'OFF' }}</span>
-        </div>
-      </div>
-      <div class="text-[10px] font-mono text-gray-400">
-        UTF-8
-      </div>
     </div>
   </div>
 </template>
@@ -264,21 +240,19 @@ const setupEditor = () => {
 // Boilerplate menu toggle
 const showMenuPopup = ref(false)
 
-// Show menu method - added .stop to prevent event propagation
-const showMenu = (event?: MouseEvent) => {
-  if (event) {
-    event.stopPropagation();
-  }
-  showMenuPopup.value = !showMenuPopup.value;
-}
-
 // Method to load boilerplate content
 const loadBoilerplate = (fileName: string) => {
-  fetch(`boilerplates/${fileName}`)  // Removed leading slash to make path relative
-    .then(res => res.text())
+  fetch(`/boilerplates/${fileName}`)
+    .then(res => {
+      if (!res.ok) throw new Error(`Failed to fetch ${fileName}`);
+      return res.text();
+    })
     .then(text => {
       editorStore.setHtmlCode(text);
-      runCode(); // Automatically run the code when loading a boilerplate
+      // Small delay to ensure store update propagates before running
+      setTimeout(() => {
+        runCode();
+      }, 50);
     })
     .catch(err => {
       console.error('Error loading boilerplate:', err);
