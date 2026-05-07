@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, useClipboard } from '@vueuse/core'
 import { useRoute, useRouter } from 'nuxt/app'
 import { useEditorStore } from '~/stores/editor'
 
@@ -9,6 +9,7 @@ export function useEditor() {
   const editorStore = useEditorStore()
   const { compress, decompress } = useBrotli()
   const { generateQr } = useQr()
+  const { copy } = useClipboard({ legacy: true })
   
   // Shared UI state
   const shareButtonText = ref('Share')
@@ -58,7 +59,7 @@ export function useEditor() {
     const encodedCode = encodeURIComponent(base64CompressedCode)  // Encode URI
     const shareUrl = `${window.location.origin}${route.path}#code=${encodedCode}`
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      await copy(shareUrl)
       generateQr(shareUrl)
       shareButtonText.value = 'Copied!'
       setTimeout(() => {
@@ -76,7 +77,7 @@ export function useEditor() {
     const encodedCode = encodeURIComponent(base64CompressedCode)  // Encode URI
     const shareUrl = `${window.location.origin}/output#code=${encodedCode}`
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      await copy(shareUrl)
       generateQr(shareUrl)
       shareButtonText.value = 'Copied!'
       setTimeout(() => {

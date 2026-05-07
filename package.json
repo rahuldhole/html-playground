@@ -22,7 +22,9 @@
     "@nuxtjs/google-adsense": "^3.0.0",
     "@nuxtjs/tailwindcss": "latest",
     "@pinia/nuxt": "latest",
+    "@vueuse/core": "^14.3.0",
     "@vueuse/integrations": "^13.0.0",
+    "@vueuse/nuxt": "latest",
     "brotli-wasm": "^3.0.1",
     "codemirror": "^6.0.1",
     "html2canvas": "^1.4.1",
@@ -34,8 +36,5 @@
     "qrcode": "^1.5.4",
     "vue": "latest",
     "vue-router": "latest"
-  },
-  "devDependencies": {
-    "@vueuse/nuxt": "latest"
   }
 }
