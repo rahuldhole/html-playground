@@ -1,231 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TypeScript Tutorial Presentation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
-    <script type="module"
-        src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
-    <script src="https://cdn.tailwindcss.com/3.4.14"></script>
-    <script src="https://cdn.jsdelivr.net/npm/typescript@5.8.3/lib/typescript.min.js"></script>
-    <style>
-        body {
-            background-color: #f8fafc;
-        }
-
-        pre {
-            background: #1f2937;
-            color: #e5e7eb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-        }
-
-        code {
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        sl-tab-panel {
-            padding: 1rem;
-        }
-
-        sl-tab {
-            font-weight: 500;
-        }
-    </style>
+  <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg">
+  <script src="https://unpkg.com/typescript/lib/typescript.js"></script>
 </head>
+<body>
 
-<body class="font-sans p-6 max-w-4xl mx-auto">
-    <sl-card class="card-overview mb-6">
-        <h1 slot="header" class="text-3xl font-bold text-gray-800">TypeScript Coding Tutorial</h1>
-        <p class="text-gray-600">Explore TypeScript's powerful features through interactive examples. Navigate the tabs
-            to learn about types, interfaces, classes, and more!</p>
-    </sl-card>
+  <h2>TS Calculator</h2>
 
-    <sl-tab-group>
-        <sl-tab slot="nav" panel="basic-types">Basic Types</sl-tab>
-        <sl-tab slot="nav" panel="interfaces">Interfaces</sl-tab>
-        <sl-tab slot="nav" panel="classes">Classes</sl-tab>
-        <sl-tab slot="nav" panel="generics">Generics</sl-tab>
-        <sl-tab slot="nav" panel="enums">Enums</sl-tab>
-        <sl-tab slot="nav" panel="union-intersection">Union & Intersection</sl-tab>
-        <sl-tab slot="nav" panel="type-assertion">Type Assertion</sl-tab>
+  <input id="a" placeholder="Enter A" />
+  <input id="b" placeholder="Enter B" />
 
-        <sl-tab-panel name="basic-types">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Basic Types</h2>
-            <p class="text-gray-600 mb-4">TypeScript provides static types to catch errors early. Here's how to use
-                basic types like string, number, boolean, arrays, and tuples.</p>
-            <pre><code id="basic-types-code">
-// Basic Types
-let name: string = "Alice";
-let age: number = 30;
-let isStudent: boolean = true;
-let hobbies: string[] = ["reading", "coding"];
-let tuple: [string, number] = ["Bob", 25];
-let anyValue: any = "Can be anything";
-let unknownValue: unknown = "Needs type checking";
+  <button onclick="runTS('add')">+</button>
+  <button onclick="runTS('sub')">-</button>
+  <button onclick="runTS('mul')">*</button>
+  <button onclick="runTS('div')">/</button>
 
-displayOutput("basic-types-output", `Name: ${name}, Age: ${age}, IsStudent: ${isStudent}`);
-displayOutput("basic-types-output", `Hobbies: ${hobbies.join(", ")}`);
-displayOutput("basic-types-output", `Tuple: ${tuple[0]}, ${tuple[1]}`);
-displayOutput("basic-types-output", `Any: ${anyValue}, Unknown: ${typeof unknownValue === 'string' ? unknownValue : 'Not a string'}`);
-      </code></pre>
-            <div id="basic-types-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
+  <h3 id="result">Result: </h3>
 
-        <sl-tab-panel name="interfaces">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Interfaces</h2>
-            <p class="text-gray-600 mb-4">Interfaces define the shape of objects, ensuring consistent structure and
-                behavior.</p>
-            <pre><code id="interfaces-code">
-interface Person {
-  name: string;
-  age: number;
-  greet(): string;
-}
+  <script>
+    function runTS(operation) {
+      const tsCode = `
+        const a: number = Number((document.getElementById('a') as HTMLInputElement).value)
+        const b: number = Number((document.getElementById('b') as HTMLInputElement).value)
 
-const person: Person = {
-  name: "Charlie",
-  age: 28,
-  greet() {
-    return `Hello, I'm ${this.name}!`;
-  }
-};
+        function calculate(op: string): number {
+          switch(op) {
+            case 'add': return a + b
+            case 'sub': return a - b
+            case 'mul': return a * b
+            case 'div': return b !== 0 ? a / b : NaN
+            default: return 0
+          }
+        }
 
-displayOutput("interfaces-output", `Interface: ${person.greet()}`);
-      </code></pre>
-            <div id="interfaces-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
+        const result = calculate("${operation}")
+        document.getElementById('result')!.innerText = "Result: " + result
+      `
 
-        <sl-tab-panel name="classes">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Classes and Inheritance</h2>
-            <p class="text-gray-600 mb-4">Classes provide object-oriented programming with inheritance for reusable
-                code.</p>
-            <pre><code id="classes-code">
-class Animal {
-  constructor(public name: string) {}
-  move(distance: number): string {
-    return `${this.name} moved ${distance}m.`;
-  }
-}
-
-class Dog extends Animal {
-  bark(): string {
-    return `${this.name} says Woof!`;
-  }
-}
-
-const dog = new Dog("Rex");
-displayOutput("classes-output", `Class: ${dog.move(10)}`);
-displayOutput("classes-output", `Inheritance: ${dog.bark()}`);
-      </code></pre>
-            <div id="classes-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
-
-        <sl-tab-panel name="generics">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Generics</h2>
-            <p class="text-gray-600 mb-4">Generics allow reusable functions that work with any type while maintaining
-                type safety.</p>
-            <pre><code id="generics-code">
-function demonstrateGenerics<T>(items: T[], prefix: string): string {
-  return `${prefix}: ${items.join(", ")}`;
-}
-
-const numbers = [1, 2, 3];
-const strings = ["apple", "banana", "cherry"];
-displayOutput("generics-output", `Generics with numbers: ${demonstrateGenerics(numbers, "Numbers")}`);
-displayOutput("generics-output", `Generics with strings: ${demonstrateGenerics(strings, "Fruits")}`);
-      </code></pre>
-            <div id="generics-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
-
-        <sl-tab-panel name="enums">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Enums</h2>
-            <p class="text-gray-600 mb-4">Enums define a set of named constants, useful for fixed sets of values.</p>
-            <pre><code id="enums-code">
-enum Direction {
-  Up = "UP",
-  Down = "DOWN",
-  Left = "LEFT",
-  Right = "RIGHT"
-}
-
-const direction: Direction = Direction.Right;
-displayOutput("enums-output", `Enum: Current direction is ${direction}`);
-      </code></pre>
-            <div id="enums-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
-
-        <sl-tab-panel name="union-intersection">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Union and Intersection Types</h2>
-            <p class="text-gray-600 mb-4">Union types allow multiple types; intersection types combine multiple
-                interfaces.</p>
-            <pre><code id="union-intersection-code">
-type ID = string | number;
-interface Business {
-  company: string;
-}
-interface Employee {
-  role: string;
-}
-type Worker = Business & Employee;
-
-const id: ID = "EMP123";
-const worker: Worker = { company: "xAI", role: "Developer" };
-displayOutput("union-intersection-output", `Union Type: ID=${id}`);
-displayOutput("union-intersection-output", `Intersection Type: Worker at ${worker.company} as ${worker.role}`);
-      </code></pre>
-            <div id="union-intersection-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
-
-        <sl-tab-panel name="type-assertion">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Type Assertion</h2>
-            <p class="text-gray-600 mb-4">Type assertions let you tell TypeScript the type of a value when it's
-                ambiguous.</p>
-            <pre><code id="type-assertion-code">
-let someValue: any = "This is a string";
-let strLength: number = (someValue as string).length;
-displayOutput("type-assertion-output", `Type Assertion: String length is ${strLength}`);
-      </code></pre>
-            <div id="type-assertion-output" class="mt-4 text-gray-700"></div>
-        </sl-tab-panel>
-    </sl-tab-group>
-
-    <script type="text/typescript" id="ts-utility">
-    // Utility function to display output
-    function displayOutput(outputId: string, message: string): void {
-      const outputDiv = document.getElementById(outputId)!;
-      const p = document.createElement('p');
-      p.textContent = message;
-      p.style.margin = '0.5rem 0';
-      outputDiv.appendChild(p);
+      const jsCode = ts.transpile(tsCode)
+      eval(jsCode)
     }
   </script>
 
-    <script>
-        // Compile and run TypeScript code for each section
-        function compileAndRun(codeId, outputId) {
-            const tsCode = document.getElementById(codeId).textContent;
-            const utilityCode = document.getElementById('ts-utility').textContent;
-            const combinedCode = utilityCode + '\n' + tsCode;
-            const compiled = ts.transpile(combinedCode, {
-                target: "es5",
-                module: "none"
-            });
-            const script = document.createElement('script');
-            script.textContent = compiled;
-            document.body.appendChild(script);
-        }
-
-        compileAndRun('basic-types-code', 'basic-types-output');
-        compileAndRun('interfaces-code', 'interfaces-output');
-        compileAndRun('classes-code', 'classes-output');
-        compileAndRun('generics-code', 'generics-output');
-        compileAndRun('enums-code', 'enums-output');
-        compileAndRun('union-intersection-code', 'union-intersection-output');
-        compileAndRun('type-assertion-code', 'type-assertion-output');
-    </script>
 </body>
 </html>
