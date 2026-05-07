@@ -10,6 +10,15 @@
         
         <div class="h-4 w-[1px] bg-gray-200 dark:border-gray-700 mx-1"></div>
         
+        <div class="relative">
+          <button @click.stop="showMenu"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all shadow-sm">
+            <Icon name="heroicons:squares-plus" class="w-4 h-4" />
+            <span>Boilerplates</span>
+          </button>
+          <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
+        </div>
+
         <button @click="handleSwitchToOutput"
           class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all shadow-sm">
           <Icon name="heroicons:eye" class="w-4 h-4" />

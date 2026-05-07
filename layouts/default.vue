@@ -10,13 +10,10 @@ useHead({
 });
 </script>
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <AppSidebar />
-    <main class="flex-1 flex flex-col min-w-0 bg-app overflow-hidden">
-      <ClientOnly>
-        <slot />
-      </ClientOnly>
-    </main>
+  <div class="h-screen bg-app overflow-hidden">
+    <ClientOnly>
+      <slot />
+    </ClientOnly>
   </div>
 </template>
 
