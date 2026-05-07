@@ -35,7 +35,7 @@
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
                   <textarea 
                     v-model="aiPrompt"
-                    @keydown.enter.ctrl="handleAISubmit"
+                    @keydown.enter.exact.prevent="handleAISubmit"
                     placeholder="e.g. Add a dark theme button or fix the layout..."
                     class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                   ></textarea>
@@ -51,7 +51,7 @@
                   </button>
                 </div>
                 <div class="mt-2 text-[8px] text-gray-400 text-center">
-                  Press Ctrl+Enter to submit
+                  Press Enter to submit
                 </div>
               </div>
             </div>
@@ -107,7 +107,7 @@
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
                   <textarea 
                     v-model="aiPrompt"
-                    @keydown.enter.ctrl="handleAISubmit"
+                    @keydown.enter.exact.prevent="handleAISubmit"
                     placeholder="e.g. Add a dark theme button..."
                     class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                   ></textarea>
