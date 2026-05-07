@@ -4,29 +4,27 @@ import { defineNuxtConfig } from 'nuxt/config'
 export default defineNuxtConfig({
   app: {
     head: {
-      title: "PoW IDE - Online HTML Editor with Dark Mode & Live Sync",
+      title: "PoW IDE - Professional Online HTML Editor",
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         {
           name: "description",
           content:
-            "PoW IDE: A powerful online HTML editor with dark mode, full-screen editing, live sync, code sharing, output sharing, and persistent storage. Build and test HTML, CSS, and JS seamlessly.",
+            "PoW IDE: A professional online HTML editor with dark mode, live sync, and premium developer experience.",
         },
-        {
-          name: "keywords",
-          content:
-            "online HTML editor, PoW IDE, dark mode code editor, live sync HTML editor, full-screen HTML IDE, share code online, persistent code storage, web development tool, free HTML editor, toggle dark mode IDE",
-        },
-        { name: "author", content: "PoW IDE Team" },
-        { name: "robots", content: "index, follow" },
       ],
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap' }
+      ]
     },
   },
 
   compatibilityDate: "2024-11-01",
 
-  // css: ['~/assets/css/tailwind.css'],
+  css: ['~/assets/css/main.css'],
   devtools: { enabled: true },
 
   googleAdsense: {

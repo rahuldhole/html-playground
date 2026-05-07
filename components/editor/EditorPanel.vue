@@ -1,118 +1,92 @@
 <template>
-  <div id="editor-container" ref="container" class="flex flex-col h-full relative">
-    <div class="flex flex-row items-center justify-between p-2 bg-gray-200 dark:bg-gray-700 rounded-t-lg">
-      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-        <div class="relative">
-          <button class="text-2xl text-red-500" @click.stop="showMenu">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" :stroke="isDarkMode ? 'white' : 'black'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu w-6 h-6">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-          <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
+  <div id="editor-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <!-- Premium Header -->
+    <div class="flex items-center justify-between px-4 py-3 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm">
+      <div class="flex items-center gap-3">
+        <div class="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+          <Icon name="heroicons:code-bracket" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">HTML Code</h2>
-        <!-- Show the switch button if showOutputButton is true -->
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Editor</h2>
+        
+        <div class="h-4 w-[1px] bg-gray-200 dark:border-gray-700 mx-1"></div>
+        
         <button @click="handleSwitchToOutput"
-          class="bg-yellow-300 hover:bg-yellow-400 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-gray-800 dark:text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm transition-colors">
-          View Output
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all shadow-sm">
+          <Icon name="heroicons:eye" class="w-4 h-4" />
+          <span>Preview</span>
         </button>
-        <label v-if="fullScreenStore.isEditorFullscreen" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" v-model="isDarkMode" class="sr-only peer" />
-          <div
-            class="w-11 h-6 bg-black peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500 dark:peer-checked:bg-blue-600">
-            <span class="absolute left-1 top-1 text-xs text-gray-600">☀️</span>
-            <span class="absolute right-1 top-1 text-xs text-white">🌙</span>
-          </div>
-        </label>
       </div>
       
-      <!-- Desktop Actions -->
-      <div class="hidden sm:flex flex-wrap items-center gap-2 sm:gap-3">
-        <div class="flex items-center gap-1 sm:gap-2">
-          <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-300">Live</span>
+      <div class="flex items-center gap-2">
+        <!-- Live Run Toggle -->
+        <div class="flex items-center gap-2 mr-2 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <span class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Live</span>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" v-model="liveRun" class="sr-only peer" />
-            <div
-              class="w-9 sm:w-11 h-5 sm:h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-blue-500 dark:peer-checked:bg-blue-600">
-            </div>
+            <div class="w-7 h-4 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
           </label>
         </div>
-        <button @click="runCode" v-show="!liveRun"
-          class="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors">
-          Run
-        </button>
-        <button @click="saveCode"
-          class="bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm transition-colors">
-          Save
-        </button>
-        <button @click="shareCode"
-          class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm transition-colors">
-          {{ shareButtonText }}
-        </button>
-        <button @click="toggleFullscreenHandler"
-          class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white px-2 py-1 transition-colors">
-          <svg v-if="fullScreenStore.isEditorFullscreen === true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="feather feather-minimize sm:w-6 sm:h-6">
-            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-          </svg>
-          <svg v-else class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 4H4v4m4-4L3 9m13-5h4v4m-4-4l5 5m-5 11h4v-4m-4 4l5-5m-11 5H4v-4m4 4l-5-5" />
-          </svg>
-        </button>
-      </div>
-      
-      <!-- Mobile Dropdown Menu -->
-      <div class="sm:hidden">
-        <EditorDropdownMenu>
-          <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-600">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-sm text-gray-700 dark:text-gray-300">Live Updates</span>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" v-model="liveRun" class="sr-only peer" />
-                <div
-                  class="w-9 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:peer-focus:ring-blue-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500 dark:peer-checked:bg-blue-600">
-                </div>
-              </label>
-            </div>
-          </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-1.5">
           <button @click="runCode" v-show="!liveRun"
-            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:hover:bg-white dark:disabled:hover:bg-gray-700 disabled:cursor-not-allowed">
-            Run Code
+            class="p-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
+            title="Run Code">
+            <Icon name="heroicons:play" class="w-5 h-5" />
           </button>
+          
           <button @click="saveCode"
-            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-            Save as HTML File
+            class="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+            title="Save HTML">
+            <Icon name="heroicons:arrow-down-tray" class="w-5 h-5" />
           </button>
+
           <button @click="shareCode"
-            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-            {{ shareButtonText }}
+            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 text-xs font-semibold">
+            <Icon name="heroicons:share" class="w-4 h-4" />
+            <span>{{ shareButtonText === 'Share' ? 'Share' : shareButtonText }}</span>
           </button>
+
           <button @click="toggleFullscreenHandler"
-            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-            {{ fullScreenStore.isEditorFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
+            class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <Icon :name="fullScreenStore.isEditorFullscreen ? 'heroicons:arrows-pointing-in' : 'heroicons:arrows-pointing-out'" class="w-5 h-5" />
           </button>
-        </EditorDropdownMenu>
+        </div>
       </div>
     </div>
     
-    <!-- CodeMirror Editor with better fullscreen handling -->
+    <!-- CodeMirror Editor Container -->
     <div
-      class="relative w-full h-[300px] sm:h-[400px] md:h-[calc(100vh-300px)] lg:h-[calc(100vh-200px)] border border-gray-300 dark:border-gray-700 rounded-b-lg overflow-hidden flex-grow"
-      :class="{ '!h-[calc(100vh-60px)] !max-h-[calc(100vh-60px)]': fullScreenStore.isEditorFullscreen }">
+      class="relative flex-grow overflow-hidden"
+      :class="{ 'fixed inset-0 z-50': fullScreenStore.isEditorFullscreen }">
       <ClientOnly>
-        <div class="w-full h-full">
-          <div ref="editorContainer" class="w-full h-full rounded-b-lg" :class="{'dark-editor': isDarkMode}"></div>
-        </div>
+        <div ref="editorContainer" class="w-full h-full" :class="{'dark-editor': isDarkMode}"></div>
         <template #fallback>
-          <div class="w-full h-full p-4 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-mono text-sm">
-            Loading editor...
+          <div class="flex items-center justify-center w-full h-full bg-card">
+            <div class="flex flex-col items-center gap-3">
+              <Icon name="heroicons:arrow-path" class="w-8 h-8 text-indigo-500 animate-spin" />
+              <span class="text-sm text-gray-500 font-medium">Initializing Editor...</span>
+            </div>
           </div>
         </template>
       </ClientOnly>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="px-4 py-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-1.5 text-[10px] font-medium text-gray-500">
+          <Icon name="heroicons:document-text" class="w-3 h-3" />
+          <span>HTML5</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px] font-medium text-gray-500">
+          <Icon name="heroicons:cursor-arrow-rays" class="w-3 h-3" />
+          <span>Live Preview: {{ liveRun ? 'ON' : 'OFF' }}</span>
+        </div>
+      </div>
+      <div class="text-[10px] font-mono text-gray-400">
+        UTF-8
+      </div>
     </div>
   </div>
 </template>

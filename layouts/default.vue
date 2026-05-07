@@ -10,15 +10,20 @@ useHead({
 });
 </script>
 <template>
-    <div>
+  <div class="flex h-screen overflow-hidden">
+    <AppSidebar />
+    <main class="flex-1 flex flex-col min-w-0 bg-app overflow-hidden">
       <ClientOnly>
-        <slot></slot>
+        <slot />
       </ClientOnly>
-    </div>
+    </main>
+  </div>
 </template>
 
-<style lang="postcss">
+<style>
+/* Global layout styles */
 body {
-  @apply min-h-screen bg-white dark:bg-gray-800 dark:text-gray-200;
+  margin: 0;
+  padding: 0;
 }
 </style>
