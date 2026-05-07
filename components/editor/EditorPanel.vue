@@ -21,6 +21,41 @@
               <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
             </div>
 
+            <div class="relative ml-1">
+              <button @click.stop="showAIPopup = !showAIPopup"
+                class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
+                :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'">
+                <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
+                <span>AI</span>
+              </button>
+              
+              <!-- AI Prompt Popup -->
+              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+                <div class="mb-2">
+                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
+                  <textarea 
+                    v-model="aiPrompt"
+                    @keydown.enter.ctrl="handleAISubmit"
+                    placeholder="e.g. Add a dark theme button or fix the layout..."
+                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                  ></textarea>
+                </div>
+                <div class="flex items-center justify-end">
+                  <button 
+                    @click="handleAISubmit"
+                    :disabled="isAILoading || !aiPrompt"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+                    <span>{{ isAILoading ? 'Thinking...' : 'Generate Update' }}</span>
+                  </button>
+                </div>
+                <div class="mt-2 text-[8px] text-gray-400 text-center">
+                  Press Ctrl+Enter to submit
+                </div>
+              </div>
+            </div>
+
             <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
             <div class="flex items-center gap-0.5">
@@ -57,6 +92,36 @@
                 <Icon name="heroicons:squares-plus" class="w-3.5 h-3.5" />
               </button>
               <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
+            </div>
+
+            <div class="relative ml-1">
+              <button @click.stop="showAIPopup = !showAIPopup"
+                class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
+                :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'">
+                <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
+              </button>
+              
+              <!-- AI Prompt Popup (Mobile specific adjustments) -->
+              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+                <div class="mb-2">
+                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
+                  <textarea 
+                    v-model="aiPrompt"
+                    @keydown.enter.ctrl="handleAISubmit"
+                    placeholder="e.g. Add a dark theme button..."
+                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                  ></textarea>
+                </div>
+                <div class="flex items-center justify-end">
+                  <button 
+                    @click="handleAISubmit"
+                    :disabled="isAILoading || !aiPrompt"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50"
+                  >
+                    Generate Update
+                  </button>
+                </div>
+              </div>
             </div>
             
             <div class="relative ml-1">
@@ -170,6 +235,51 @@ const { shareCode, saveCode, runCode, shareButtonText } = useEditor()
 const { width: windowWidth } = useWindowSize()
 const isMobile = computed(() => windowWidth.value < 768)
 const showMobileMenu = ref(false)
+
+// AI Assistant
+const showAIPopup = ref(false)
+const aiPrompt = ref('')
+const isAILoading = ref(false)
+
+const handleAISubmit = async () => {
+  if (isAILoading.value || !aiPrompt.value) return
+  
+  isAILoading.value = true
+  try {
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: aiPrompt.value,
+        code: editorStore.htmlCode
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.statusMessage || 'API request failed')
+    }
+
+    const data = await response.json()
+    let updatedCode = data.choices[0]?.message?.content
+    
+    if (updatedCode) {
+      // Clean up markdown code blocks if the AI ignored instructions
+      updatedCode = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+      
+      editorStore.setHtmlCode(updatedCode)
+      showAIPopup.value = false
+      aiPrompt.value = ''
+    }
+  } catch (error: any) {
+    console.error('AI Error:', error)
+    alert(`Error: ${error.message || 'Failed to connect to AI'}`)
+  } finally {
+    isAILoading.value = false
+  }
+}
 
 // Clipboard logic
 const { copy, copied: isCopied, isSupported } = useClipboard({ legacy: true })

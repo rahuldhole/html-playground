@@ -42,5 +42,9 @@ export default defineNuxtConfig({
     optimizeDeps: {
       exclude: ['brotli-wasm']
     }
+  },
+
+  runtimeConfig: {
+    openRouterKey: process.env.OPENROUTER_API_KEY
   }
 });
