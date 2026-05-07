@@ -1,14 +1,12 @@
 export default defineEventHandler(async (event) => {
   const { prompt, code } = await readBody(event)
   const config = useRuntimeConfig()
-  
-  // Use runtime config if defined in nuxt.config, otherwise fallback to process.env
-  const apiKey = config.openRouterKey || process.env.OPENROUTER_API_KEY
+  const apiKey = config.openRouterKey
 
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'your_openrouter_api_key_here' || apiKey === '') {
     throw createError({
       statusCode: 500,
-      statusMessage: 'OpenRouter API key is not configured in environment variables.'
+      statusMessage: 'OpenRouter API key is missing. Please set NUXT_OPEN_ROUTER_KEY in your .env file.'
     })
   }
 
@@ -21,7 +19,7 @@ export default defineEventHandler(async (event) => {
         "X-Title": "Minimalist HTML IDE"
       },
       body: {
-        "model": "google/gemini-2.0-flash-lite-preview-02-05:free",
+        "model": "openrouter/free",
         "messages": [
           {
             "role": "system",
