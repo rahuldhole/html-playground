@@ -117,7 +117,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useEventListener, useMagicKeys, useFullscreen } from '@vueuse/core'
 import { useColorMode } from '#imports'
@@ -136,9 +136,9 @@ const editorStore = useEditorStore()
 const { shareCode, saveCode, runCode, shareButtonText } = useEditor()
 
 // Template refs
-const container = ref(null)
-const editorContainer = ref(null)
-const editorView = ref(null)
+const container = ref<HTMLElement | null>(null)
+const editorContainer = ref<HTMLElement | null>(null)
+const editorView = ref<EditorView | null>(null)
 
 // Use the fullscreen store
 const fullScreenStore = useFullScreenStore()
@@ -184,8 +184,7 @@ const liveRun = computed({
 const keys = useMagicKeys()
 
 // Just monitor Ctrl+V for paste events
-const { ctrl_v, meta_v } = keys
-const isPaste = computed(() => ctrl_v.value || meta_v.value)
+const isPaste = computed(() => (keys.ctrl_v?.value || keys.meta_v?.value) || false)
 
 watch(isPaste, (newValue) => {
   if (newValue && liveRun.value) {
@@ -242,15 +241,17 @@ const setupEditor = () => {
   ];
   
   // Update editor when fullscreen changes
-  watch(editorStore.fullscreenSwitch, async () => {
+  watch(() => editorStore.fullscreenSwitch, async () => {
     await nextTick();
     if (editorView.value) {
       // Allow time for the DOM to update before triggering a remeasure
       setTimeout(() => {
-        editorView.value.requestMeasure();
-        // Force a refresh of the editor layout
-        const view = editorView.value;
-        view.dispatch({});
+        if (editorView.value) {
+          editorView.value.requestMeasure();
+          // Force a refresh of the editor layout
+          const view = editorView.value;
+          view.dispatch({});
+        }
       }, 100);
     }
   });
@@ -281,7 +282,7 @@ const setupEditor = () => {
 const showMenuPopup = ref(false)
 
 // Show menu method - added .stop to prevent event propagation
-const showMenu = (event) => {
+const showMenu = (event?: MouseEvent) => {
   if (event) {
     event.stopPropagation();
   }
@@ -289,7 +290,7 @@ const showMenu = (event) => {
 }
 
 // Method to load boilerplate content
-const loadBoilerplate = (fileName) => {
+const loadBoilerplate = (fileName: string) => {
   fetch(`boilerplates/${fileName}`)  // Removed leading slash to make path relative
     .then(res => res.text())
     .then(text => {
@@ -346,7 +347,7 @@ watch(isDarkMode, async () => {
     if (editorView.value) {
       try {
         editorView.value.dispatch({
-          selection: selection
+          selection: selection as any
         });
       } catch (e) {
         console.warn('Could not restore selection after theme change', e);
@@ -365,10 +366,12 @@ watch(() => fullScreenStore.isEditorFullscreen, async (newValue) => {
   if (editorView.value) {
     // Allow time for the DOM to update before triggering a remeasure
     setTimeout(() => {
-      editorView.value.requestMeasure()
-      // Force a refresh of the editor layout
-      const view = editorView.value
-      view.dispatch({})
+      if (editorView.value) {
+        editorView.value.requestMeasure()
+        // Force a refresh of the editor layout
+        const view = editorView.value
+        view.dispatch({})
+      }
     }, 100)
   }
 })

@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia'
 
+interface EditorState {
+  htmlCode: string;
+  liveRun: boolean;
+  isOutputDark: boolean;
+  isEditorFullscreen: boolean;
+  isOutputFullscreen: boolean;
+  fullscreenSwitch: number;
+}
+
 export const useEditorStore = defineStore('editor', {
-  state: () => ({
+  state: (): EditorState => ({
     htmlCode: '<h1>Hello World</h1>\n<p>Start editing to see the output!</p>',
     liveRun: true,
     isOutputDark: false,
@@ -10,20 +19,20 @@ export const useEditorStore = defineStore('editor', {
     fullscreenSwitch: 0, // New counter to trigger fullscreen events
   }),
   actions: {
-    setHtmlCode(code) {
+    setHtmlCode(code: string) {
       this.htmlCode = code
     },
-    setLiveRun(value) {
+    setLiveRun(value: boolean) {
       this.liveRun = value
     },
-    setOutputDark(value) {
+    setOutputDark(value: boolean) {
       this.isOutputDark = value
     },
-    setEditorFullscreen(value) {
+    setEditorFullscreen(value: boolean) {
       this.isEditorFullscreen = value
       if (value) this.isOutputFullscreen = false
     },
-    setOutputFullscreen(value) {
+    setOutputFullscreen(value: boolean) {
       this.isOutputFullscreen = value
       if (value) this.isEditorFullscreen = false
     },
@@ -36,7 +45,7 @@ export const useEditorStore = defineStore('editor', {
       if (this.isOutputFullscreen) this.isEditorFullscreen = false
     },
     // New action to trigger fullscreen panel switching
-    triggerFullscreenSwitch(targetPanel) {
+    triggerFullscreenSwitch(targetPanel: 'editor' | 'output') {
       if (targetPanel === 'editor') {
         this.isOutputFullscreen = false;
         this.isEditorFullscreen = true;
@@ -48,6 +57,7 @@ export const useEditorStore = defineStore('editor', {
     }
   },
   persist: {
+    // @ts-ignore
     storage: piniaPluginPersistedstate.localStorage(),
     pick: ['htmlCode', 'liveRun', 'isOutputDark'],
   },

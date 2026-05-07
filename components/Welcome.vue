@@ -16,6 +16,6 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // No logic needed, just a static component
 </script>

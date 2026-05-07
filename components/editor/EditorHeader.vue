@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 </script>
 <template>
   <header class="bg-white dark:bg-gray-800 shadow-sm p-4 sticky top-0 z-10">

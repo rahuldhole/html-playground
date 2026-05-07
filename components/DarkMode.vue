@@ -9,7 +9,7 @@
     </label>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const colorMode = useColorMode()
 
 // Reactive dark mode state

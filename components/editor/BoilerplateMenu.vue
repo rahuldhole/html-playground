@@ -66,7 +66,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
@@ -264,10 +264,10 @@ const filteredTemplates = computed(() => {
 });
 
 // Click outside handling
-const menuRef = ref(null);
+const menuRef = ref<HTMLElement | null>(null);
 
-const handleClickOutside = (event) => {
-  if (props.modelValue && menuRef.value && !menuRef.value.contains(event.target)) {
+const handleClickOutside = (event: MouseEvent) => {
+  if (props.modelValue && menuRef.value && !menuRef.value.contains(event.target as Node)) {
     closeMenu();
   }
 };
@@ -291,12 +291,12 @@ const closeMenu = () => {
   emit('update:modelValue', false);
 };
 
-const selectBoilerplate = (template) => {
+const selectBoilerplate = (template: string) => {
   emit('select', template);
   closeMenu();
 };
 
-const previewBoilerplate = (template) => {
+const previewBoilerplate = (template: string) => {
   window.open(`/boilerplates/${template}`, template);
 };
 

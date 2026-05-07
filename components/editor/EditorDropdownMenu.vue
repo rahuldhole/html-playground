@@ -17,7 +17,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const isOpen = ref(false);
@@ -27,14 +27,15 @@ const toggleMenu = () => {
 };
 
 // Close menu when clicking outside
-const handleClickOutside = (event) => {
-  if (isOpen.value && !event.target.closest('.relative')) {
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (isOpen.value && !target.closest('.relative')) {
     isOpen.value = false;
   }
 };
 
 // Close menu when pressing escape
-const handleEscKey = (event) => {
+const handleEscKey = (event: KeyboardEvent) => {
   if (isOpen.value && event.key === 'Escape') {
     isOpen.value = false;
   }

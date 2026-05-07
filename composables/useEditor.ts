@@ -7,15 +7,17 @@ export function useEditor() {
   const route = useRoute()
   const router = useRouter()
   const editorStore = useEditorStore()
+  // @ts-ignore
   const { compress, decompress } = useBrotli()
+  // @ts-ignore
   const { generateQr } = useQr()
   const { copy } = useClipboard({ legacy: true })
   
   // Shared UI state
-  const shareButtonText = ref('Share')
+  const shareButtonText = ref<string>('Share')
   
   // Using a direct function to get the iframe rather than storing a reference
-  const getOutputIframe = () => {
+  const getOutputIframe = (): HTMLIFrameElement | null => {
     // Try to get the iframe element directly
     return document.querySelector('iframe') || null
   }
@@ -36,7 +38,7 @@ export function useEditor() {
   }
 
   // Function to load code from URL hash
-  const getCodeFromUrl = async () => {
+  const getCodeFromUrl = async (): Promise<string> => {
     const hash = route.hash.slice(1) // Remove the '#' prefix
     const params = new URLSearchParams(hash)
     const base64CompressedCode = params.get('code')
@@ -102,7 +104,8 @@ export function useEditor() {
     }
     
     try {
-      const doc = iframe.contentDocument || iframe.contentWindow.document
+      const doc = iframe.contentDocument || iframe.contentWindow?.document
+      if (!doc) return
       doc.open()
       doc.write(`
         <!DOCTYPE html>

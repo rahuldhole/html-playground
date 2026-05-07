@@ -96,7 +96,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import EditorDropdownMenu from './EditorDropdownMenu.vue'
 import html2canvas from 'html2canvas'
@@ -105,8 +105,8 @@ import { useEditor } from '~/composables/useEditor'
 import { useFullScreenStore } from '~/stores/fullScreenStore'
 import { useFullscreen } from '@vueuse/core'
 
-const container = ref(null)
-const outputFrame = ref(null)
+const container = ref<HTMLElement | null>(null)
+const outputFrame = ref<HTMLIFrameElement | null>(null)
 const editorStore = useEditorStore()
 
 const { getCodeFromUrl, shareOutput, updateOutput, shareButtonText } = useEditor()
@@ -130,7 +130,9 @@ const handleSwitchToEditor = async () => {
 const outputIframe = async () => {
   const htmlContent = editorStore.htmlCode || '<h1>No content available</h1>'
   const blob = new Blob([htmlContent], { type: 'text/html' })
-  outputFrame.value.src = URL.createObjectURL(blob)
+  if (outputFrame.value) {
+    outputFrame.value.src = URL.createObjectURL(blob)
+  }
 }
 
 // Initialize iframe content on mount
@@ -156,7 +158,7 @@ const openInNewTab = async () => {
 const takeScreenshot = () => {
   // Get the iframe content for screenshot
   const iframe = outputFrame.value;
-  if (iframe) {
+  if (iframe && iframe.contentDocument?.body) {
     html2canvas(iframe.contentDocument.body).then(canvas => {
       // Create download link
       const link = document.createElement('a');

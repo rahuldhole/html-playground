@@ -1,10 +1,10 @@
 import { ref } from "vue";
 import { useQRCode } from "@vueuse/integrations/useQRCode";
 
-const qrCode = ref("");
+const qrCode = ref<string>("");
 export function useQr() {
 
-  const generateQr = async (text) => {
+  const generateQr = async (text: string) => {
     qrCode.value = "";
     const qr = await useQRCode(text, {
       errorCorrectionLevel: 'H',

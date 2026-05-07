@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '~/stores/editor'
 import Welcome from '~/components/Welcome.vue'
 
@@ -17,9 +17,9 @@ definePageMeta({
 
 const route = useRoute()
 const editorStore = useEditorStore()
-const code = ref(null)
-const run = ref(false)
-const showButtons = ref(false)
+const code = ref<string | null>(null)
+const run = ref<boolean>(false)
+const showButtons = ref<boolean>(false)
 
 const blobUrl = computed(() => {
   const htmlContent = code.value || editorStore.htmlCode
@@ -34,7 +34,7 @@ onBeforeMount(async () => {
   }
 })
 
-const openInNewTab = (url) => {
+const openInNewTab = (url: string) => {
   const newWindow = window.open(url, '_run')
   if (newWindow) {
     newWindow.focus()
@@ -47,11 +47,14 @@ const closeCard = () => {
   showButtons.value = false
 }
 
-const iframeError = ref(false)
-const outputFrame = ref(null)
+const iframeError = ref<boolean>(false)
+const outputFrame = ref<HTMLIFrameElement | null>(null)
 const handleIframeLoad = () => {
-  const iframeDocument = outputFrame.value.contentDocument || outputFrame.value.contentWindow.document
+  if (!outputFrame.value) return
+  const iframeDocument = outputFrame.value.contentDocument || outputFrame.value.contentWindow?.document
+  if (!iframeDocument) return
   const body = iframeDocument.body
+  if (!body) return
   body.style.margin = '0'
   body.style.padding = '0'
 }

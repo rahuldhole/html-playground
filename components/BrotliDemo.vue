@@ -78,7 +78,7 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const text = ref('Hello, world!');
 const compressed = ref(null);
 const error = ref(null);

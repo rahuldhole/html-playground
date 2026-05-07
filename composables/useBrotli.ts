@@ -1,10 +1,11 @@
-import brotliPromise from '/node_modules/brotli-wasm/index.web.js';
+// @ts-ignore
+import brotliPromise from 'brotli-wasm';
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 export function useBrotli() {
-  async function compress(data) {
+  async function compress(data: string): Promise<string> {
     try {
       const brotli = await brotliPromise;
       const inputData = textEncoder.encode(data);
@@ -12,6 +13,7 @@ export function useBrotli() {
       if (!compressedData) {
         throw new Error('Compression returned null');
       }
+      // @ts-ignore
       return btoa(String.fromCharCode.apply(null, compressedData));
     } catch (err) {
       console.error("Brotli Compression failed:", err);
@@ -19,7 +21,7 @@ export function useBrotli() {
     }
   }
 
-  async function decompress(compressedData) {
+  async function decompress(compressedData: string): Promise<string> {
     try {
       const brotli = await brotliPromise;
       const binaryString = atob(compressedData);
