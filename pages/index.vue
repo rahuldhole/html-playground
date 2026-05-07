@@ -38,6 +38,9 @@
 </template>
 
 <script setup lang="ts">
+defineRouteRules({
+  prerender: true
+})
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useWindowSize } from '@vueuse/core'
 

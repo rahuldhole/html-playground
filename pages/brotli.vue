@@ -1,4 +1,7 @@
 <script setup lang="ts">
+defineRouteRules({
+  prerender: true
+})
 import { ClientOnly } from '#components';
 
 </script>

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+defineRouteRules({
+  prerender: true
+})
 import { useEditorStore } from '~/stores/editor'
 import Welcome from '~/components/Welcome.vue'
 
