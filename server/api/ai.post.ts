@@ -19,7 +19,8 @@ export default defineEventHandler(async (event) => {
         "X-Title": "Minimalist HTML IDE"
       },
       body: {
-        "model": "openrouter/free",
+        // "model": "openrouter/free",
+        "model": "google/gemma-4-26b-a4b-it",
         "messages": [
           {
             "role": "system",
