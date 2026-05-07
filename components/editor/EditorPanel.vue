@@ -34,6 +34,7 @@
                 <div class="mb-2">
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
                   <textarea 
+                    ref="aiInput"
                     v-model="aiPrompt"
                     @keydown.enter.exact.prevent="handleAISubmit"
                     placeholder="e.g. Add a dark theme button or fix the layout..."
@@ -114,6 +115,7 @@
                 <div class="mb-2">
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
                   <textarea 
+                    ref="aiInputMobile"
                     v-model="aiPrompt"
                     @keydown.enter.exact.prevent="handleAISubmit"
                     placeholder="e.g. Add a dark theme button..."
@@ -394,6 +396,20 @@ const handleClear = () => {
 const container = ref<HTMLElement | null>(null)
 const editorContainer = ref<HTMLElement | null>(null)
 const editorView = ref<EditorView | null>(null)
+const aiInput = ref<HTMLTextAreaElement | null>(null)
+const aiInputMobile = ref<HTMLTextAreaElement | null>(null)
+
+// Watch for AI popup to focus input
+watch(showAIPopup, async (val) => {
+  if (val) {
+    await nextTick()
+    if (isMobile.value) {
+      aiInputMobile.value?.focus()
+    } else {
+      aiInput.value?.focus()
+    }
+  }
+})
 
 // Use the fullscreen store
 const fullScreenStore = useFullScreenStore()
