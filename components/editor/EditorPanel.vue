@@ -18,6 +18,33 @@
             </button>
             <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
           </div>
+
+          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+          <div class="flex items-center gap-0.5">
+            <button @click="handleUndo" title="Undo"
+              class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+              <Icon name="heroicons:arrow-uturn-left" class="w-3.5 h-3.5" />
+            </button>
+            <button @click="handleRedo" title="Redo"
+              class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+              <Icon name="heroicons:arrow-uturn-right" class="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+          <div class="flex items-center gap-0.5">
+            <button @click="handleCopy" :title="isCopied ? 'Copied!' : 'Copy All'"
+              class="p-1.5 rounded-md transition-all"
+              :class="isCopied ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'">
+              <Icon :name="copyIcon" class="w-3.5 h-3.5" />
+            </button>
+            <button @click="handleClear" title="Clear Editor"
+              class="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+              <Icon name="heroicons:trash" class="w-3.5 h-3.5" />
+            </button>
+          </div>
           
           <div v-if="fullScreenStore.isEditorFullscreen" class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
           
@@ -79,9 +106,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { useEventListener, useMagicKeys, useFullscreen } from '@vueuse/core'
+import { useEventListener, useMagicKeys, useFullscreen, useClipboard } from '@vueuse/core'
+import { undo, redo } from '@codemirror/commands'
 import { useColorMode } from '#imports'
-import { EditorView, basicSetup } from 'codemirror'
+import { basicSetup } from 'codemirror'
+import { EditorView } from '@codemirror/view'
 import { html } from '@codemirror/lang-html'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { EditorState } from '@codemirror/state'
@@ -94,6 +123,36 @@ import { useFullScreenStore } from '~/stores/fullScreenStore'
 // Connect to the store
 const editorStore = useEditorStore()
 const { shareCode, saveCode, runCode, shareButtonText } = useEditor()
+
+// Clipboard logic
+const { copy, copied: isCopied, isSupported } = useClipboard({ legacy: true })
+const copyIcon = computed(() => isCopied.value ? 'heroicons:check' : 'heroicons:clipboard-document')
+
+const handleUndo = () => {
+  if (editorView.value) {
+    editorView.value.contentDOM.focus()
+    document.execCommand('undo')
+  }
+}
+
+const handleRedo = () => {
+  if (editorView.value) {
+    editorView.value.contentDOM.focus()
+    document.execCommand('redo')
+  }
+}
+
+const handleCopy = () => {
+  if (editorView.value) {
+    copy(editorView.value.state.doc.toString())
+  } else {
+    copy(editorStore.htmlCode)
+  }
+}
+
+const handleClear = () => {
+  editorStore.setHtmlCode('')
+}
 
 // Template refs
 const container = ref<HTMLElement | null>(null)
