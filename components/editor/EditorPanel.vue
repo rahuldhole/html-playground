@@ -40,7 +40,15 @@
                     class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                   ></textarea>
                 </div>
-                <div class="flex items-center justify-end">
+                <div class="flex items-center justify-end gap-2">
+                  <button 
+                    v-if="isAILoading"
+                    @click="handleCancelAI"
+                    class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
+                  >
+                    <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
+                    <span>Cancel</span>
+                  </button>
                   <button 
                     @click="handleAISubmit"
                     :disabled="isAILoading || !aiPrompt"
@@ -112,13 +120,22 @@
                     class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                   ></textarea>
                 </div>
-                <div class="flex items-center justify-end">
+                <div class="flex items-center justify-end gap-2">
+                  <button 
+                    v-if="isAILoading"
+                    @click="handleCancelAI"
+                    class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
+                  >
+                    <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
+                    <span>Cancel</span>
+                  </button>
                   <button 
                     @click="handleAISubmit"
                     :disabled="isAILoading || !aiPrompt"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50 flex items-center gap-2"
                   >
-                    Generate Update
+                    <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+                    <span>{{ isAILoading ? 'Thinking...' : 'Generate Update' }}</span>
                   </button>
                 </div>
               </div>
@@ -240,17 +257,29 @@ const showMobileMenu = ref(false)
 const showAIPopup = ref(false)
 const aiPrompt = ref('')
 const isAILoading = ref(false)
+const abortController = ref<AbortController | null>(null)
+
+const handleCancelAI = () => {
+  if (abortController.value) {
+    abortController.value.abort()
+    abortController.value = null
+    isAILoading.value = false
+  }
+}
 
 const handleAISubmit = async () => {
   if (isAILoading.value || !aiPrompt.value) return
   
   isAILoading.value = true
+  abortController.value = new AbortController()
+  
   try {
     const response = await fetch("/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      signal: abortController.value.signal,
       body: JSON.stringify({
         prompt: aiPrompt.value,
         code: editorStore.htmlCode
@@ -274,10 +303,15 @@ const handleAISubmit = async () => {
       aiPrompt.value = ''
     }
   } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.log('AI Generation cancelled by user')
+      return
+    }
     console.error('AI Error:', error)
     alert(`Error: ${error.message || 'Failed to connect to AI'}`)
   } finally {
     isAILoading.value = false
+    abortController.value = null
   }
 }
 
@@ -559,6 +593,7 @@ onMounted(() => {
 
 // Clean up only the editor view on unmount
 onUnmounted(() => {
+  handleCancelAI();
   if (editorView.value) {
     editorView.value.destroy();
   }
