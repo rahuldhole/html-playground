@@ -12,15 +12,16 @@
         <div class="flex items-center gap-1">
           <div class="relative">
             <button @click.stop="showMenuPopup = !showMenuPopup"
-              class="px-2 py-1 rounded-md text-[10px] font-bold uppercase text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
-              Templates
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
+              <Icon name="heroicons:squares-plus" class="w-3.5 h-3.5" />
+              <span>Templates</span>
             </button>
             <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
           </div>
           
-          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+          <div v-if="fullScreenStore.isEditorFullscreen" class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
           
-          <button @click="handleSwitchToOutput"
+          <button v-if="fullScreenStore.isEditorFullscreen" @click="handleSwitchToOutput"
             class="px-2 py-1 rounded-md text-[10px] font-bold uppercase text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
             Preview
           </button>
@@ -29,11 +30,11 @@
       
       <!-- Right Actions -->
       <div class="flex items-center gap-1.5">
-        <!-- Live Indicator (Always semi-visible) -->
-        <div class="flex items-center gap-2 mr-2 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50">
-          <div class="w-1.5 h-1.5 rounded-full" :class="liveRun ? 'bg-green-500 animate-pulse' : 'bg-gray-400'"></div>
-          <span class="text-[9px] font-bold uppercase text-gray-400">Live</span>
-        </div>
+        <button @click="isDarkMode = !isDarkMode"
+          class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+          title="Toggle Dark Mode">
+          <Icon :name="isDarkMode ? 'heroicons:sun' : 'heroicons:moon'" class="w-4 h-4" />
+        </button>
 
         <button @click="runCode" v-show="!liveRun"
           class="p-1.5 rounded-md text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all"
@@ -48,9 +49,9 @@
         </button>
 
         <button @click="shareCode"
-          class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm text-[10px] font-bold uppercase">
-          <Icon name="heroicons:share" class="w-3.5 h-3.5" />
-          <span>{{ shareButtonText === 'Share' ? 'Share' : shareButtonText }}</span>
+          class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+          :title="shareButtonText">
+          <Icon :name="shareButtonText === 'Copied!' ? 'heroicons:check' : 'heroicons:share'" class="w-4 h-4" />
         </button>
 
         <button @click="toggleFullscreenHandler"

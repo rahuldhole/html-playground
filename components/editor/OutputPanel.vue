@@ -10,12 +10,12 @@
         
         <!-- Navigation -->
         <div class="flex items-center gap-1">
-          <button @click="handleSwitchToEditor"
+          <button v-if="isOutputFullscreen" @click="handleSwitchToEditor"
             class="px-2 py-1 rounded-md text-[10px] font-bold uppercase text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
             Editor
           </button>
           
-          <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
+          <div v-if="isOutputFullscreen" class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
           
           <div class="flex items-center gap-0.5">
             <button @click="outputIframe" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Reload Preview">
@@ -47,9 +47,9 @@
         </button>
         
         <button @click="shareOutput"
-          class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm text-[10px] font-bold uppercase">
-          <Icon name="heroicons:share" class="w-3.5 h-3.5" />
-          <span>Share</span>
+          class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+          :title="shareButtonText">
+          <Icon :name="shareButtonText === 'Copied!' ? 'heroicons:check' : 'heroicons:share'" class="w-4 h-4" />
         </button>
         
         <button @click="toggleFullscreenHandler"
