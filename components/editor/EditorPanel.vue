@@ -292,16 +292,62 @@ const handleAISubmit = async () => {
     }
 
     const data = await response.json()
-    let updatedCode = data.choices[0]?.message?.content
-    
-    if (updatedCode) {
-      // Clean up markdown code blocks if the AI ignored instructions
-      updatedCode = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+
+    // If it's a QStash offloaded request, it will have a messageId
+    if (data.messageId) {
+      const messageId = data.messageId
       
-      editorStore.setHtmlCode(updatedCode)
-      showAIPopup.value = false
-      aiPrompt.value = ''
+      // Polling logic
+      const pollForResults = async () => {
+        if (abortController.value?.signal.aborted) return
+
+        try {
+          const statusRes = await fetch(`/api/ai-status?id=${messageId}`, {
+            signal: abortController.value?.signal
+          })
+          
+          if (!statusRes.ok) return setTimeout(pollForResults, 2000)
+          
+          const statusData = await statusRes.json()
+          
+          if (statusData.status === 'completed') {
+            if (statusData.error) {
+              throw new Error(statusData.error)
+            }
+
+            let updatedCode = statusData.data.choices[0]?.message?.content
+            if (updatedCode) {
+              updatedCode = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+              editorStore.setHtmlCode(updatedCode)
+              showAIPopup.value = false
+              aiPrompt.value = ''
+            }
+            isAILoading.value = false
+            abortController.value = null
+          } else {
+            setTimeout(pollForResults, 2000)
+          }
+        } catch (pollError: any) {
+          if (pollError.name === 'AbortError') return
+          console.error('Polling error:', pollError)
+          setTimeout(pollForResults, 3000)
+        }
+      }
+
+      pollForResults()
+    } else {
+      // Direct response handling
+      let updatedCode = data.choices[0]?.message?.content
+      if (updatedCode) {
+        updatedCode = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+        editorStore.setHtmlCode(updatedCode)
+        showAIPopup.value = false
+        aiPrompt.value = ''
+      }
+      isAILoading.value = false
+      abortController.value = null
     }
+
   } catch (error: any) {
     if (error.name === 'AbortError') {
       console.log('AI Generation cancelled by user')
@@ -309,7 +355,6 @@ const handleAISubmit = async () => {
     }
     console.error('AI Error:', error)
     alert(`Error: ${error.message || 'Failed to connect to AI'}`)
-  } finally {
     isAILoading.value = false
     abortController.value = null
   }
