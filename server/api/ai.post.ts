@@ -13,8 +13,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Handle Trigger.dev Offloading if enabled
-  if (config.enableTriggerDev) {
+  // Handle Trigger.dev Offloading unless explicitly disabled
+  if (!config.disableTriggerDev) {
     try {
       const handle = await tasks.trigger<typeof aiGenerateTask>("ai-generate", {
         prompt,

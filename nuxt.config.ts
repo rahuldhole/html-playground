@@ -62,6 +62,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     openRouterKey: '',
     triggerSecretKey: '',
-    enableTriggerDev: process.env.ENABLE_TRIGGER_DEV === 'true'
+    disableTriggerDev: process.env.DISABLE_TRIGGER_DEV === 'true'
   }
 });
