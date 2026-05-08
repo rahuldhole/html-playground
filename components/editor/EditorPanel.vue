@@ -56,7 +56,7 @@
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                    <span>{{ isAILoading ? 'Thinking...' : 'Generate Update' }}</span>
+                    <span>{{ isAILoading ? aiStatusText : 'Generate Update' }}</span>
                   </button>
                 </div>
                 <div class="mt-2 text-[8px] text-gray-400 text-center">
@@ -137,7 +137,7 @@
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50 flex items-center gap-2"
                   >
                     <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                    <span>{{ isAILoading ? 'Thinking...' : 'Generate Update' }}</span>
+                    <span>{{ isAILoading ? aiStatusText : 'Generate Update' }}</span>
                   </button>
                 </div>
               </div>
@@ -260,6 +260,7 @@ const showMobileMenu = ref(false)
 const showAIPopup = ref(false)
 const aiPrompt = ref('')
 const isAILoading = ref(false)
+const aiStatusText = ref('Thinking...')
 const abortController = ref<AbortController | null>(null)
 
 const handleCancelAI = () => {
@@ -277,8 +278,7 @@ const handleAISubmit = async () => {
   abortController.value = new AbortController()
   
   try {
-    // 1. Trigger the background task
-    const triggerResponse = await fetch("/api/ai", {
+    const response = await fetch("/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -290,55 +290,44 @@ const handleAISubmit = async () => {
       })
     })
 
-    if (!triggerResponse.ok) {
-      const errorData = await triggerResponse.json()
-      throw new Error(errorData.statusMessage || 'Failed to trigger AI task')
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.statusMessage || 'API request failed')
     }
 
-    const { runId } = await triggerResponse.json()
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('Response body is null')
+
+    let accumulatedCode = ''
+    const decoder = new TextDecoder()
     
     // Clear prompt and close popup but keep loading state
     showAIPopup.value = false
     aiPrompt.value = ''
+    aiStatusText.value = 'Generating...'
 
-    // 2. Poll for the result
-    let finished = false
-    let attempts = 0
-    const maxAttempts = 60 // 2 minutes with 2s interval
-
-    while (!finished && attempts < maxAttempts) {
-      if (abortController.value?.signal.aborted) break
-
-      const statusResponse = await fetch(`/api/ai-status?runId=${runId}`, {
-        signal: abortController.value?.signal
-      })
-
-      if (!statusResponse.ok) {
-        throw new Error('Failed to check task status')
-      }
-
-      const statusData = await statusResponse.json()
-
-      if (statusData.status === 'COMPLETED') {
-        const finalCode = statusData.output?.code
-        if (finalCode) {
-          editorStore.setHtmlCode(finalCode)
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        const chunk = decoder.decode(value, { stream: true })
+        accumulatedCode += chunk
+        
+        // Update store with current accumulated code
+        // We strip markdown blocks if they start appearing
+        let displayCode = accumulatedCode
+        if (displayCode.startsWith('```')) {
+            displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
         }
-        finished = true
-      } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(statusData.status)) {
-        throw new Error(statusData.error || `Task failed with status: ${statusData.status}`)
-      } else {
-        // Still running, wait and poll again
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        attempts++
+        editorStore.setHtmlCode(displayCode)
       }
-    }
-
-    if (!finished && attempts >= maxAttempts) {
-      throw new Error('Generation timed out. Please try again.')
+    } finally {
+      reader.releaseLock()
     }
 
     isAILoading.value = false
+    aiStatusText.value = 'Thinking...'
     abortController.value = null
 
   } catch (error: any) {
@@ -349,6 +338,7 @@ const handleAISubmit = async () => {
     console.error('AI Error:', error)
     alert(`Error: ${error.message || 'Failed to connect to AI'}`)
     isAILoading.value = false
+    aiStatusText.value = 'Thinking...'
     abortController.value = null
   }
 }
