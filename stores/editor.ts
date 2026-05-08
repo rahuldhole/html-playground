@@ -7,6 +7,7 @@ interface EditorState {
   isEditorFullscreen: boolean;
   isOutputFullscreen: boolean;
   fullscreenSwitch: number;
+  refreshCounter: number;
 }
 
 export const useEditorStore = defineStore('editor', {
@@ -17,6 +18,7 @@ export const useEditorStore = defineStore('editor', {
     isEditorFullscreen: false,
     isOutputFullscreen: false,
     fullscreenSwitch: 0, // New counter to trigger fullscreen events
+    refreshCounter: 0, // Counter to trigger output refresh
   }),
   actions: {
     setHtmlCode(code: string) {
@@ -53,7 +55,10 @@ export const useEditorStore = defineStore('editor', {
         this.isEditorFullscreen = false;
         this.isOutputFullscreen = true;
       }
-      this.fullscreenSwitch++; // Increment to trigger watchers
+      this.fullscreenSwitch++; // Increment to watchers
+    },
+    triggerRefresh() {
+      this.refreshCounter++;
     }
   },
   persist: {

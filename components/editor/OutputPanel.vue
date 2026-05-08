@@ -18,7 +18,7 @@
           <div v-if="isOutputFullscreen" class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
           
           <div class="flex items-center gap-0.5">
-            <button @click="outputIframe" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Reload Preview">
+            <button @click="updateOutput" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Reload Preview">
               <Icon name="heroicons:arrow-path" class="w-3 h-3" />
             </button>
           </div>
@@ -83,12 +83,25 @@
     </div>
 
     <!-- Output Content -->
-    <div class="flex-grow bg-white relative overflow-hidden"
-      :class="{ 'fixed inset-0 z-50': isOutputFullscreen }">
-      <iframe ref="outputFrame" class="w-full h-full border-none" />
+    <div class="flex-grow relative overflow-hidden"
+      :class="[editorStore.isOutputDark ? 'bg-[#15171e]' : 'bg-white', { 'fixed inset-0 z-50': isOutputFullscreen }]">
+      <div class="absolute inset-0">
+        <iframe 
+          ref="iframe1" 
+          class="absolute inset-0 w-full h-full border-none"
+          :class="activeIframe === 1 ? 'z-10 opacity-100' : 'z-0 opacity-0'"
+          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
+        />
+        <iframe 
+          ref="iframe2" 
+          class="absolute inset-0 w-full h-full border-none"
+          :class="activeIframe === 2 ? 'z-10 opacity-100' : 'z-0 opacity-0'"
+          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
+        />
+      </div>
       
       <!-- Loading Overlay -->
-      <div v-if="!editorStore.htmlCode" class="absolute inset-0 flex items-center justify-center bg-gray-50/80 backdrop-blur-sm">
+      <div v-if="!editorStore.htmlCode" class="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-20">
         <div class="text-center">
           <Icon name="heroicons:document-text" class="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p class="text-gray-500 font-medium">Waiting for code...</p>
@@ -99,17 +112,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed, onUnmounted } from 'vue'
 import EditorDropdownMenu from './EditorDropdownMenu.vue'
 import html2canvas from 'html2canvas'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'
 import { useFullScreenStore } from '~/stores/fullScreenStore'
-import { useFullscreen, useElementSize } from '@vueuse/core'
+import { useFullscreen, useElementSize, useThrottleFn } from '@vueuse/core'
 
 const container = ref<HTMLElement | null>(null)
-const outputFrame = ref<HTMLIFrameElement | null>(null)
+const iframe1 = ref<HTMLIFrameElement | null>(null)
+const iframe2 = ref<HTMLIFrameElement | null>(null)
 const editorStore = useEditorStore()
+
+// Double buffering state
+const activeIframe = ref(1)
+const lastBlobUrl = ref<string | null>(null)
 
 // Responsiveness
 const { width: containerWidth } = useElementSize(container)
@@ -118,7 +136,7 @@ const isNarrow = computed(() => containerWidth.value < 400)
 const isMobile = isNarrow
 const showMobileMenu = ref(false)
 
-const { getCodeFromUrl, shareOutput, updateOutput, shareButtonText } = useEditor()
+const { getCodeFromUrl, shareOutput, shareButtonText } = useEditor()
 
 // Use the fullscreen store
 const fullScreenStore = useFullScreenStore()
@@ -136,13 +154,84 @@ const handleSwitchToEditor = async () => {
   await fullScreenStore.handleSwitchToEditor()
 }
 
-const outputIframe = async () => {
-  const htmlContent = editorStore.htmlCode || '<h1>No content available</h1>'
-  const blob = new Blob([htmlContent], { type: 'text/html' })
-  if (outputFrame.value) {
-    outputFrame.value.src = URL.createObjectURL(blob)
-  }
+// Function to wrap code in a template with theme support
+const wrapHtml = (code: string) => {
+  return `
+    <!DOCTYPE html>
+    <html style="height: 100%;">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          width: 100%;
+          background-color: ${editorStore.isOutputDark ? '#15171e' : '#ffffff'};
+          color: ${editorStore.isOutputDark ? '#ffffff' : '#000000'};
+          font-family: Arial, sans-serif;
+          transition: background-color 0.3s, color 0.3s;
+        }
+      </style>
+    </head>
+    <body>
+    ${code}
+    </body>
+    </html>
+  `
 }
+
+const updateOutput = () => {
+  const content = editorStore.htmlCode || '<h1>No content available</h1>'
+  const fullHtml = wrapHtml(content)
+  
+  const nextIframeNum = activeIframe.value === 1 ? 2 : 1
+  const nextIframe = nextIframeNum === 1 ? iframe1.value : iframe2.value
+  
+  if (!nextIframe) return
+
+  const blob = new Blob([fullHtml], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+
+  // Track the current update to avoid race conditions
+  const currentUpdateUrl = url
+
+  const onLoad = () => {
+    // Only swap if this is still the latest update
+    if (nextIframe.src === currentUpdateUrl) {
+      activeIframe.value = nextIframeNum
+      
+      // Clean up previous blob URL after a short delay to ensure swap is smooth
+      if (lastBlobUrl.value) {
+        const oldUrl = lastBlobUrl.value
+        setTimeout(() => URL.revokeObjectURL(oldUrl), 1000)
+      }
+      lastBlobUrl.value = currentUpdateUrl
+    }
+    nextIframe.removeEventListener('load', onLoad)
+  }
+
+  nextIframe.addEventListener('load', onLoad)
+  nextIframe.src = url
+}
+
+// Throttled version for streaming and rapid edits
+const throttledUpdate = useThrottleFn(() => {
+  updateOutput()
+}, 250) // Update at most every 250ms during streaming
+
+// Watch for code changes to update automatically
+watch(() => editorStore.htmlCode, () => {
+  if (editorStore.liveRun) {
+    throttledUpdate()
+  }
+})
+
+// Watch for manual refresh triggers
+watch(() => editorStore.refreshCounter, () => {
+  updateOutput()
+})
 
 // Initialize iframe content on mount
 onMounted(async () => {
@@ -150,7 +239,13 @@ onMounted(async () => {
   if (code) {
     editorStore.htmlCode = code
   }
-  outputIframe()
+  updateOutput()
+})
+
+onUnmounted(() => {
+  if (lastBlobUrl.value) {
+    URL.revokeObjectURL(lastBlobUrl.value)
+  }
 })
 
 const toggleOutputTheme = () => {
@@ -159,17 +254,16 @@ const toggleOutputTheme = () => {
 }
 
 const openInNewTab = async () => {
-  const htmlContent = editorStore.htmlCode || '<h1>No content available</h1>'
-  const blob = new Blob([htmlContent], { type: 'text/html' })
+  const content = editorStore.htmlCode || '<h1>No content available</h1>'
+  const blob = new Blob([wrapHtml(content)], { type: 'text/html' })
   window.open(URL.createObjectURL(blob), '_run')
 }
 
 const takeScreenshot = () => {
-  // Get the iframe content for screenshot
-  const iframe = outputFrame.value;
+  // Get the active iframe for screenshot
+  const iframe = activeIframe.value === 1 ? iframe1.value : iframe2.value;
   if (iframe && iframe.contentDocument?.body) {
     html2canvas(iframe.contentDocument.body).then(canvas => {
-      // Create download link
       const link = document.createElement('a');
       link.download = 'output-screenshot.png';
       link.href = canvas.toDataURL('image/png');
@@ -193,5 +287,9 @@ defineExpose({
 
 .flex-grow {
   flex-grow: 1;
+}
+
+iframe {
+  background-color: v-bind('editorStore.isOutputDark ? "#15171e" : "#ffffff"');
 }
 </style>

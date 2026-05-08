@@ -94,10 +94,17 @@ export function useEditor() {
 
   // Function to update output iframe with current code - now gets iframe directly
   const updateOutput = () => {
+    // Trigger the store refresh which OutputPanel watches for seamless updates
+    editorStore.triggerRefresh()
+    
+    // Fallback for standalone pages or situations where OutputPanel isn't used
+    // but a manual update is requested
     const iframe = getOutputIframe()
     
-    if (!iframe) {
-      console.warn('Output iframe not found in DOM')
+    // If we're in the main editor (which has #output-container), we let OutputPanel 
+    // handle the update seamlessly via the triggerRefresh() above.
+    // Otherwise, we update the iframe directly.
+    if (!iframe || document.getElementById('output-container')) {
       return
     }
     
@@ -132,9 +139,6 @@ export function useEditor() {
 
       const blob = new Blob([fullHtml], { type: 'text/html' })
       currentBlobUrl = URL.createObjectURL(blob)
-      
-      // Setting src is handled more gracefully by the browser's loading thread
-      // than synchronous doc.write
       iframe.src = currentBlobUrl
     } catch (error) {
       console.error('Error updating output:', error)
