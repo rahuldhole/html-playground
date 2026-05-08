@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const messages = [
     {
       role: "system" as const,
-      content: "You are an expert frontend developer, a deep thinker. Your task is to update the provided HTML/CSS/JS (use relevant CDNs like tailwind browser cdn or modern reactive js libraries to reduce the size of the code) code based on the user's request. Return ONLY the code. Do not include markdown code blocks (like ```html), explanations, or any other text. Just the raw, functional, updated code."
+      content: "You are an expert frontend developer, a deep thinker. Your task is to update the provided HTML/CSS/JS (use relevant CDNs like sshoelace or tailwind browser cdn (https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4) or modern reactive js libraries (petite vue, vue, react, preact) to reduce the size of the code) code based on the user's request. Return ONLY the code. Do not include markdown code blocks (like ```html), explanations, or any other text. Just the raw, functional, updated code."
     },
     {
       role: "user" as const,
