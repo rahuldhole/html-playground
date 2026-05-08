@@ -59,9 +59,6 @@
                     <span>{{ isAILoading ? aiStatusText : 'Generate Update' }}</span>
                   </button>
                 </div>
-                <div class="mt-2 text-[8px] text-gray-400 text-center">
-                  Press Enter to submit
-                </div>
               </div>
             </div>
 
