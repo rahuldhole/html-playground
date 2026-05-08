@@ -77,7 +77,7 @@ export function useEditor() {
     const compressedCode = await compress(editorStore.htmlCode)
     const base64CompressedCode = btoa(compressedCode)  // Convert to Base64
     const encodedCode = encodeURIComponent(base64CompressedCode)  // Encode URI
-    const shareUrl = `${window.location.origin}/publish#code=${encodedCode}`
+    const shareUrl = `${window.location.origin}/publish?publish=true#code=${encodedCode}`
     try {
       await copy(shareUrl)
       generateQr(shareUrl)

@@ -69,11 +69,31 @@
           <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
         </button>
         
-        <button @click="shareOutput"
-          class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
-          :title="shareButtonText">
-          <Icon :name="shareButtonText === 'Copied!' ? 'heroicons:check' : 'heroicons:share'" class="w-4 h-4" />
-        </button>
+        <div class="relative">
+          <button @click.stop="showShareMenu = !showShareMenu"
+            class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+            :title="shareButtonText">
+            <Icon :name="shareButtonText === 'Copied!' ? 'heroicons:check' : 'heroicons:share'" class="w-4 h-4" />
+          </button>
+          
+          <div v-if="showShareMenu" class="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-1.5 z-50">
+            <button @click="shareCode(); showShareMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-2 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+              <Icon name="heroicons:code-bracket" class="w-4 h-4 text-indigo-500" />
+              <div class="flex flex-col items-start">
+                <span>Editable Link</span>
+                <span class="text-[9px] text-gray-400 dark:text-gray-500 font-normal">Share with code editor</span>
+              </div>
+            </button>
+            <div class="h-[1px] bg-gray-100 dark:bg-gray-700 my-1 mx-1"></div>
+            <button @click="shareOutput(); showShareMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-2 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
+              <Icon name="heroicons:globe-alt" class="w-4 h-4 text-green-500" />
+              <div class="flex flex-col items-start text-left">
+                <span>Publish Link</span>
+                <span class="text-[9px] text-gray-400 dark:text-gray-500 font-normal leading-tight mt-0.5">Share as read-only app<br/>(Ctrl+Shift+E to edit)</span>
+              </div>
+            </button>
+          </div>
+        </div>
         
         <button @click="toggleFullscreenHandler"
           class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all">
@@ -135,8 +155,9 @@ const isCompact = computed(() => containerWidth.value < 500)
 const isNarrow = computed(() => containerWidth.value < 400)
 const isMobile = isNarrow
 const showMobileMenu = ref(false)
+const showShareMenu = ref(false)
 
-const { getCodeFromUrl, shareOutput, shareButtonText } = useEditor()
+const { getCodeFromUrl, shareCode, shareOutput, shareButtonText } = useEditor()
 
 // Use the fullscreen store
 const fullScreenStore = useFullScreenStore()

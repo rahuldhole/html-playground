@@ -17,7 +17,25 @@ const route = useRoute()
 const editorStore = useEditorStore()
 const code = ref<string | null>(null)
 const run = ref<boolean>(false)
-const showButtons = ref<boolean>(true)
+const showButtons = ref<boolean>(route.query.publish !== 'true')
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+    e.preventDefault()
+    navigateTo(`/editor${route.hash}`)
+  }
+}
+
+onMounted(async () => {
+  code.value = await getCodeFromUrl()
+  run.value = route.query.run === 'true'
+  
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
 const blobUrl = computed(() => {
   if (!process.client) return ''
@@ -27,11 +45,6 @@ const blobUrl = computed(() => {
   } catch (e) {
     return ''
   }
-})
-
-onMounted(async () => {
-  code.value = await getCodeFromUrl()
-  run.value = route.query.run === 'true'
 })
 
 const openInNewTab = (url: string) => {
@@ -57,6 +70,8 @@ const handleIframeLoad = () => {
   if (!body) return
   body.style.margin = '0'
   body.style.padding = '0'
+  
+  iframeDocument.addEventListener('keydown', handleKeydown)
 }
 const handleIframeError = () => {
   iframeError.value = true
