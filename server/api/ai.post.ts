@@ -1,84 +1,73 @@
-import { Client } from '@upstash/qstash'
+import { OpenRouter } from '@openrouter/sdk'
 
 export default defineEventHandler(async (event) => {
   const { prompt, code } = await readBody(event)
   const config = useRuntimeConfig()
-  
+
+  if (!config.openRouterKey || config.openRouterKey === '') {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'OpenRouter API key is missing.'
+    })
+  }
+
+  const sdk = new OpenRouter({
+    apiKey: config.openRouterKey,
+  })
+
   const messages = [
     {
-      "role": "system",
-      "content": "You are an expert frontend developer, a deep thinker. Your task is to update the provided HTML/CSS/JS (use relevant CDNs to reduce the size of the code) code based on the user's request. Return ONLY the code. Do not include markdown code blocks (like ```html), explanations, or any other text. Just the raw, functional, updated code."
+      role: "system" as const,
+      content: "You are an expert frontend developer, a deep thinker. Your task is to update the provided HTML/CSS/JS (use relevant CDNs to reduce the size of the code) code based on the user's request. Return ONLY the code. Do not include markdown code blocks (like ```html), explanations, or any other text. Just the raw, functional, updated code."
     },
     {
-      "role": "user",
-      "content": `Current Code:\n${code}\n\nUser Request: ${prompt}`
+      role: "user" as const,
+      content: `Current Code:\n${code}\n\nUser Request: ${prompt}`
     }
   ]
 
-  // Normal Direct API Call
-  if (!config.aiUseQStash) {
-    if (!config.openRouterKey || config.openRouterKey === '') {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'OpenRouter API key is missing.'
-      })
-    }
-
-    try {
-      const response: any = await $fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${config.openRouterKey}`,
-          "Content-Type": "application/json",
-          "X-Title": "Minimalist HTML IDE"
-        },
-        body: {
-          "model": "openrouter/free",
-          "messages": messages
-        }
-      })
-      return response
-    } catch (error: any) {
-      console.error('OpenRouter API Error:', error.data || error.message)
-      throw createError({
-        statusCode: error.statusCode || 500,
-        statusMessage: error.data?.error?.message || 'Failed to connect to OpenRouter'
-      })
-    }
-  }
-
-  // QStash Offloading
-  if (!config.qstashToken) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'QStash token is missing.'
-    })
-  }
-
-  const client = new Client({ 
-    token: config.qstashToken,
-    baseUrl: config.qstashUrl || undefined
-  })
-
   try {
-    const res = await client.publishJSON({
-      url: "https://openrouter.ai/api/v1/chat/completions",
-      headers: {
-        "Authorization": `Bearer ${config.openRouterKey}`,
-        "X-Title": "Minimalist HTML IDE"
-      },
-      body: {
-        "model": "google/gemma-4-26b-a4b-it",
-        "messages": messages
+    const stream = await sdk.chat.send({
+      appTitle: "Minimalist HTML IDE",
+      chatRequest: {
+        model: "google/gemini-2.0-flash-001",
+        messages: messages,
+        stream: true
       }
     })
 
-    return { messageId: res.messageId }
+    // Create a ReadableStream that extracts only the content delta
+    const responseStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const content = chunk.choices?.[0]?.delta?.content
+            if (content) {
+              controller.enqueue(new TextEncoder().encode(content))
+            }
+          }
+        } catch (e) {
+          console.error("Stream processing error:", e)
+        } finally {
+          controller.close()
+        }
+      }
+    })
+
+    // Set appropriate headers for streaming
+    setResponseHeaders(event, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    })
+
+    return sendStream(event, responseStream)
   } catch (error: any) {
-    console.error('QStash Error:', error.message)
+    console.error('OpenRouter SDK Error:', error.message)
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to offload AI request to QStash'
+      statusMessage: error.message || 'Failed to connect to OpenRouter'
     })
   }
 })

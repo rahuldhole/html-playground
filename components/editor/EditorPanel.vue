@@ -293,62 +293,40 @@ const handleAISubmit = async () => {
       throw new Error(errorData.statusMessage || 'API request failed')
     }
 
-    const data = await response.json()
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('Response body is null')
 
-    // If it's a QStash offloaded request, it will have a messageId
-    if (data.messageId) {
-      const messageId = data.messageId
-      
-      // Polling logic
-      const pollForResults = async () => {
-        if (abortController.value?.signal.aborted) return
+    let accumulatedCode = ''
+    const decoder = new TextDecoder()
+    
+    // Clear prompt and close popup but keep loading state
+    showAIPopup.value = false
+    const originalPrompt = aiPrompt.value
+    aiPrompt.value = ''
 
-        try {
-          const statusRes = await fetch(`/api/ai-status?id=${messageId}`, {
-            signal: abortController.value?.signal
-          })
-          
-          if (!statusRes.ok) return setTimeout(pollForResults, 2000)
-          
-          const statusData = await statusRes.json()
-          
-          if (statusData.status === 'completed') {
-            if (statusData.error) {
-              throw new Error(statusData.error)
-            }
-
-            let updatedCode = statusData.data.choices[0]?.message?.content
-            if (updatedCode) {
-              updatedCode = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
-              editorStore.setHtmlCode(updatedCode)
-              showAIPopup.value = false
-              aiPrompt.value = ''
-            }
-            isAILoading.value = false
-            abortController.value = null
-          } else {
-            setTimeout(pollForResults, 2000)
-          }
-        } catch (pollError: any) {
-          if (pollError.name === 'AbortError') return
-          console.error('Polling error:', pollError)
-          setTimeout(pollForResults, 3000)
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        const chunk = decoder.decode(value, { stream: true })
+        accumulatedCode += chunk
+        
+        // Update store with current accumulated code
+        // We strip markdown blocks if they start appearing
+        let displayCode = accumulatedCode
+        if (displayCode.startsWith('```')) {
+            displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
         }
+        editorStore.setHtmlCode(displayCode)
       }
-
-      pollForResults()
-    } else {
-      // Direct response handling
-      let updatedCode = data.choices[0]?.message?.content
-      if (updatedCode) {
-        updatedCode = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
-        editorStore.setHtmlCode(updatedCode)
-        showAIPopup.value = false
-        aiPrompt.value = ''
-      }
-      isAILoading.value = false
-      abortController.value = null
+    } finally {
+      reader.releaseLock()
     }
+
+    isAILoading.value = false
+    abortController.value = null
+
 
   } catch (error: any) {
     if (error.name === 'AbortError') {

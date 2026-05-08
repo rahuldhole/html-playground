@@ -60,11 +60,6 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    openRouterKey: '',
-    qstashUrl: '',
-    qstashToken: '',
-    qstashCurrentSigningKey: '',
-    qstashNextSigningKey: '',
-    aiUseQStash: false
+    openRouterKey: ''
   }
 });
