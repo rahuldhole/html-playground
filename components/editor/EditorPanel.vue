@@ -282,13 +282,29 @@ const isAILoading = ref(false)
 const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
 const abortController = ref<AbortController | null>(null)
+const currentRunId = ref<string | null>(null)
 
-const handleCancelAI = () => {
+const handleCancelAI = async () => {
   if (abortController.value) {
     abortController.value.abort()
     abortController.value = null
-    isAILoading.value = false
   }
+
+  if (currentRunId.value) {
+    try {
+      await fetch("/api/ai-cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ runId: currentRunId.value })
+      })
+    } catch (err) {
+      console.error("Failed to cancel background job:", err)
+    }
+    currentRunId.value = null
+  }
+
+  isAILoading.value = false
+  aiStatusText.value = 'Thinking...'
 }
 
 const handleAISubmit = async () => {
@@ -322,6 +338,7 @@ const handleAISubmit = async () => {
     // Check if it's a Trigger.dev runId response (JSON) or a Stream (Text)
     if (contentType.includes("application/json")) {
       const { runId, publicToken } = await response.json()
+      currentRunId.value = runId
       
       // Configure the SDK with the public token for this session
       const { runs, streams, configure } = await import("@trigger.dev/sdk/v3")
@@ -398,6 +415,7 @@ const handleAISubmit = async () => {
         isAILoading.value = false
         aiStatusText.value = 'Thinking...'
         abortController.value = null
+        currentRunId.value = null
       }
     } else {
       // Direct Stream implementation
@@ -413,7 +431,7 @@ const handleAISubmit = async () => {
         let hasStarted = false
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done || abortController.value?.signal.aborted) break
           
           if (!hasStarted) {
             hasStarted = true
@@ -438,8 +456,7 @@ const handleAISubmit = async () => {
     isAILoading.value = false
     aiStatusText.value = 'Thinking...'
     abortController.value = null
-
-
+    currentRunId.value = null
   } catch (error: any) {
     if (error.name === 'AbortError') {
       console.log('AI Generation cancelled by user')
@@ -450,6 +467,7 @@ const handleAISubmit = async () => {
     isAILoading.value = false
     aiStatusText.value = 'Thinking...'
     abortController.value = null
+    currentRunId.value = null
   }
 }
 
