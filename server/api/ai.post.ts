@@ -6,6 +6,13 @@ export default defineEventHandler(async (event) => {
   const { prompt, code } = await readBody(event)
   const config = useRuntimeConfig()
 
+  // Ensure Trigger.dev is configured if key is available
+  if (config.triggerSecretKey) {
+    configure({
+      secretKey: config.triggerSecretKey
+    })
+  }
+
   if (!config.openRouterKey || config.openRouterKey === '') {
     throw createError({
       statusCode: 500,

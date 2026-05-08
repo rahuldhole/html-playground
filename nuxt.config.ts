@@ -40,9 +40,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'cloudflare_pages',
-    cloudflare: {
-      nodeCompat: true
-    },
+    externals: {
+      external: ['node:buffer', 'node:process', 'node:events', 'node:util', 'node:stream', 'node:url', 'node:path', 'node:timers']
+    }
   },
 
   routeRules: {
@@ -61,6 +61,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     openRouterKey: '',
+    triggerSecretKey: '',
     disableTriggerDev: process.env.DISABLE_TRIGGER_DEV === 'true'
   }
 });

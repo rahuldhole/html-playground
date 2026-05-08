@@ -1,15 +1,10 @@
 <script setup lang="ts">
 defineRouteRules({
-  prerender: true
+  prerender: false,
+  ssr: false
 })
 import { useEditorStore } from '~/stores/editor'
 import Welcome from '~/components/Welcome.vue'
-
-const layout = useState('layout')
-
-onBeforeMount(() => {
-  layout.value = 'blank'
-})
 
 const { getCodeFromUrl } = useEditor()
 
@@ -25,11 +20,16 @@ const run = ref<boolean>(false)
 const showButtons = ref<boolean>(false)
 
 const blobUrl = computed(() => {
+  if (!process.client) return ''
   const htmlContent = code.value || editorStore.htmlCode
-  return URL.createObjectURL(new Blob([htmlContent], { type: 'text/html' }))
+  try {
+    return URL.createObjectURL(new Blob([htmlContent], { type: 'text/html' }))
+  } catch (e) {
+    return ''
+  }
 })
 
-onBeforeMount(async () => {
+onMounted(async () => {
   code.value = await getCodeFromUrl()
   run.value = route.query.run === 'true'
   if (code.value || run.value) {
