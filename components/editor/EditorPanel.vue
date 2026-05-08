@@ -30,15 +30,26 @@
               </button>
               
               <!-- AI Prompt Popup -->
-              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50 overflow-hidden">
+                <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" class="mb-3 p-2 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100/50 dark:border-indigo-800/50 max-h-32 overflow-y-auto custom-scrollbar">
+                  <div class="flex items-center gap-2 mb-1 sticky top-0 bg-transparent">
+                    <Icon name="heroicons:light-bulb" class="w-3 h-3 text-indigo-500 animate-pulse" />
+                    <span class="text-[9px] font-bold uppercase text-indigo-500 tracking-wider">AI Thinking</span>
+                  </div>
+                  <p class="text-[10px] text-gray-600 dark:text-gray-400 italic">
+                    {{ aiReasoning || aiStatusText }}
+                  </p>
+                </div>
+
                 <div class="mb-2">
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
                   <textarea 
                     ref="aiInput"
                     v-model="aiPrompt"
                     @keydown.enter.exact.prevent="handleAISubmit"
+                    :disabled="isAILoading"
                     placeholder="e.g. Add a dark theme button or fix the layout..."
-                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   ></textarea>
                 </div>
                 <div class="flex items-center justify-end gap-2">
@@ -56,7 +67,7 @@
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                    <span>{{ isAILoading ? aiStatusText : 'Generate Update' }}</span>
+                    <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
                   </button>
                 </div>
               </div>
@@ -109,14 +120,25 @@
               
               <!-- AI Prompt Popup (Mobile specific adjustments) -->
               <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+                <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" class="mb-3 p-2 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100/50 dark:border-indigo-800/50 max-h-24 overflow-y-auto">
+                  <div class="flex items-center gap-2 mb-1">
+                    <Icon name="heroicons:light-bulb" class="w-3 h-3 text-indigo-500 animate-pulse" />
+                    <span class="text-[9px] font-bold uppercase text-indigo-500 tracking-wider">AI Thinking</span>
+                  </div>
+                  <p class="text-[10px] text-gray-600 dark:text-gray-400 italic">
+                    {{ aiReasoning || aiStatusText }}
+                  </p>
+                </div>
+
                 <div class="mb-2">
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
                   <textarea 
                     ref="aiInputMobile"
                     v-model="aiPrompt"
                     @keydown.enter.exact.prevent="handleAISubmit"
+                    :disabled="isAILoading"
                     placeholder="e.g. Add a dark theme button..."
-                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   ></textarea>
                 </div>
                 <div class="flex items-center justify-end gap-2">
@@ -134,7 +156,7 @@
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50 flex items-center gap-2"
                   >
                     <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                    <span>{{ isAILoading ? aiStatusText : 'Generate Update' }}</span>
+                    <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
                   </button>
                 </div>
               </div>
@@ -258,6 +280,7 @@ const showAIPopup = ref(false)
 const aiPrompt = ref('')
 const isAILoading = ref(false)
 const aiStatusText = ref('Thinking...')
+const aiReasoning = ref('')
 const abortController = ref<AbortController | null>(null)
 
 const handleCancelAI = () => {
@@ -302,18 +325,36 @@ const handleAISubmit = async () => {
       const { runs, streams, configure } = await import("@trigger.dev/sdk/v3")
       configure({ accessToken: publicToken })
 
-      showAIPopup.value = false
-      aiPrompt.value = ''
       aiStatusText.value = 'Initializing...'
+      aiReasoning.value = ''
 
       try {
         let accumulatedCode = ''
         
-        // Start reading the stream in parallel to the run subscription
+        // Start reading the reasoning stream
+        const reasoningStreamPromise = (async () => {
+          try {
+            const stream = await streams.read(runId, "ai-reasoning")
+            for await (const chunk of stream) {
+              aiReasoning.value += chunk
+              if (abortController.value?.signal.aborted) break
+            }
+          } catch (err) {
+            console.error("Error reading reasoning stream:", err)
+          }
+        })()
+
+        // Start reading the code stream in parallel to the run subscription
         const streamPromise = (async () => {
           try {
             const stream = await streams.read(runId, "ai-output")
+            let hasStarted = false
             for await (const chunk of stream) {
+              if (!hasStarted) {
+                hasStarted = true
+                showAIPopup.value = false
+                aiPrompt.value = ''
+              }
               accumulatedCode += chunk
               
               let displayCode = accumulatedCode
@@ -326,7 +367,7 @@ const handleAISubmit = async () => {
               if (abortController.value?.signal.aborted) break
             }
           } catch (err) {
-            console.error("Error reading stream:", err)
+            console.error("Error reading output stream:", err)
           }
         })()
 
@@ -335,8 +376,8 @@ const handleAISubmit = async () => {
           aiStatusText.value = run.status || 'Thinking...'
 
           if (run.status === 'COMPLETED') {
-            // Wait for the stream to finish processing just in case
-            await streamPromise
+            // Wait for streams to finish processing
+            await Promise.all([streamPromise, reasoningStreamPromise])
             
             const finalCode = (run.output as any)?.code
             if (finalCode) {
@@ -355,6 +396,7 @@ const handleAISubmit = async () => {
       } finally {
         isAILoading.value = false
         aiStatusText.value = 'Thinking...'
+        aiReasoning.value = ''
         abortController.value = null
       }
     } else {
@@ -365,15 +407,21 @@ const handleAISubmit = async () => {
       let accumulatedCode = ''
       const decoder = new TextDecoder()
       
-      showAIPopup.value = false
-      aiPrompt.value = ''
       aiStatusText.value = 'Generating...'
+      aiReasoning.value = ''
 
       try {
+        let hasStarted = false
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
           
+          if (!hasStarted) {
+            hasStarted = true
+            showAIPopup.value = false
+            aiPrompt.value = ''
+          }
+
           const chunk = decoder.decode(value, { stream: true })
           accumulatedCode += chunk
           
@@ -730,5 +778,19 @@ onUnmounted(() => {
 /* Dirty fix editor scrollbar */
 .cm-editor {
   height: 100%;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 </style>

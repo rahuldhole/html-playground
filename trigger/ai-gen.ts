@@ -66,10 +66,20 @@ Core Philosophy:
       });
 
       let accumulated = '';
+      let hasStartedCode = false;
       
       for await (const chunk of stream) {
+        const reasoning = (chunk.choices?.[0]?.delta as any)?.reasoning_content;
         const content = chunk.choices?.[0]?.delta?.content;
+
+        if (reasoning) {
+          await streams.append("ai-reasoning", reasoning);
+        }
+
         if (content) {
+          if (!hasStartedCode) {
+            hasStartedCode = true;
+          }
           accumulated += content;
           
           // Publish the chunk to the Trigger.dev stream
