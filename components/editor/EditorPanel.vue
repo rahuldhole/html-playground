@@ -313,18 +313,33 @@ const handleAISubmit = async () => {
         const streamPromise = (async () => {
           try {
             const stream = await streams.read(runId, "ai-output")
+            let lastUpdate = Date.now()
+            const THROTTLE_MS = 80
+
             for await (const chunk of stream) {
               accumulatedCode += chunk
               
-              let displayCode = accumulatedCode
-              // Clean up markdown blocks if they appear in the stream
-              if (displayCode.includes('```')) {
-                displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+              const now = Date.now()
+              if (now - lastUpdate > THROTTLE_MS) {
+                let displayCode = accumulatedCode
+                // Clean up markdown blocks if they appear in the stream
+                if (displayCode.includes('```')) {
+                  displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+                }
+                editorStore.setHtmlCode(displayCode)
+                lastUpdate = now
               }
-              editorStore.setHtmlCode(displayCode)
               
               if (abortController.value?.signal.aborted) break
             }
+
+            // Final update for the stream
+            let finalDisplayCode = accumulatedCode
+            if (finalDisplayCode.includes('```')) {
+              finalDisplayCode = finalDisplayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+            }
+            editorStore.setHtmlCode(finalDisplayCode)
+
           } catch (err) {
             console.error("Error reading stream:", err)
           }
@@ -341,6 +356,10 @@ const handleAISubmit = async () => {
             const finalCode = (run.output as any)?.code
             if (finalCode) {
               editorStore.setHtmlCode(finalCode)
+            }
+            // Run code once at the very end if liveRun is active
+            if (liveRun.value) {
+              runCode()
             }
             break // Stop listening once finished
           } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
@@ -370,6 +389,9 @@ const handleAISubmit = async () => {
       aiStatusText.value = 'Generating...'
 
       try {
+        let lastUpdate = Date.now()
+        const THROTTLE_MS = 80 // Update UI every 80ms
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
@@ -377,11 +399,29 @@ const handleAISubmit = async () => {
           const chunk = decoder.decode(value, { stream: true })
           accumulatedCode += chunk
           
-          let displayCode = accumulatedCode
-          if (displayCode.startsWith('```')) {
-              displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+          const now = Date.now()
+          if (now - lastUpdate > THROTTLE_MS) {
+            let displayCode = accumulatedCode
+            if (displayCode.includes('```')) {
+                displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+            }
+            editorStore.setHtmlCode(displayCode)
+            lastUpdate = now
           }
-          editorStore.setHtmlCode(displayCode)
+
+          if (abortController.value?.signal.aborted) break
+        }
+        
+        // Final update to ensure we have the complete code
+        let finalDisplayCode = accumulatedCode
+        if (finalDisplayCode.includes('```')) {
+            finalDisplayCode = finalDisplayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+        }
+        editorStore.setHtmlCode(finalDisplayCode)
+        
+        // If liveRun is on, run it once at the end
+        if (liveRun.value) {
+          runCode()
         }
       } finally {
         reader.releaseLock()
@@ -569,7 +609,8 @@ const setupEditor = () => {
         const newValue = update.state.doc.toString();
         editorStore.setHtmlCode(newValue);
         
-        if (liveRun.value) {
+        // Only run code if not currently streaming AI output
+        if (liveRun.value && !isAILoading.value) {
           runCode();
         }
       }
