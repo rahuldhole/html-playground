@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+import { LANDING_PAGE_HTML } from '../utils/landing'
+
 interface EditorState {
   htmlCode: string;
   liveRun: boolean;
@@ -12,7 +14,7 @@ interface EditorState {
 
 export const useEditorStore = defineStore('editor', {
   state: (): EditorState => ({
-    htmlCode: '<h1>Hello World</h1>\n<p>Start editing to see the output!</p>',
+    htmlCode: LANDING_PAGE_HTML,
     liveRun: true,
     isOutputDark: false,
     isEditorFullscreen: false,
