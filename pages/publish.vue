@@ -32,9 +32,6 @@ const blobUrl = computed(() => {
 onMounted(async () => {
   code.value = await getCodeFromUrl()
   run.value = route.query.run === 'true'
-  if (code.value || run.value) {
-    openInNewTab(blobUrl.value)
-  }
 })
 
 const openInNewTab = (url: string) => {

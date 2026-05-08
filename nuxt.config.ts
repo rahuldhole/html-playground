@@ -55,7 +55,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/api/**': { cors: true }
+    '/api/**': { cors: true },
+    '/output': { redirect: '/publish' }
   },
 
   experimental: {

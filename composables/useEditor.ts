@@ -72,12 +72,12 @@ export function useEditor() {
     }
   }
 
-  // Share output function using hash
+  // Share publish function using hash
   const shareOutput = async () => {
     const compressedCode = await compress(editorStore.htmlCode)
     const base64CompressedCode = btoa(compressedCode)  // Convert to Base64
     const encodedCode = encodeURIComponent(base64CompressedCode)  // Encode URI
-    const shareUrl = `${window.location.origin}/output#code=${encodedCode}`
+    const shareUrl = `${window.location.origin}/publish#code=${encodedCode}`
     try {
       await copy(shareUrl)
       generateQr(shareUrl)

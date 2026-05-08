@@ -4,7 +4,7 @@ const colorMode = useColorMode();
 
 const navItems = [
   { name: 'Editor', icon: 'heroicons:code-bracket', path: '/' },
-  { name: 'Output', icon: 'heroicons:eye', path: '/output' },
+  { name: 'Publish', icon: 'heroicons:eye', path: '/publish' },
   { name: 'Brotli', icon: 'heroicons:bolt', path: '/brotli' },
 ];
 
