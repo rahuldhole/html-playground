@@ -232,7 +232,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { useEventListener, useMagicKeys, useFullscreen, useClipboard, useWindowSize } from '@vueuse/core'
+import { useMagicKeys, useFullscreen, useClipboard, useWindowSize } from '@vueuse/core'
 import { undo, redo } from '@codemirror/commands'
 import { useColorMode } from '#imports'
 import { basicSetup } from 'codemirror'
@@ -240,7 +240,6 @@ import { EditorView } from '@codemirror/view'
 import { html } from '@codemirror/lang-html'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { EditorState } from '@codemirror/state'
-import EditorDropdownMenu from './EditorDropdownMenu.vue'
 import BoilerplateMenu from './BoilerplateMenu.vue'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'
@@ -301,7 +300,6 @@ const handleAISubmit = async () => {
     
     // Clear prompt and close popup but keep loading state
     showAIPopup.value = false
-    const originalPrompt = aiPrompt.value
     aiPrompt.value = ''
 
     try {
@@ -341,20 +339,18 @@ const handleAISubmit = async () => {
 }
 
 // Clipboard logic
-const { copy, copied: isCopied, isSupported } = useClipboard({ legacy: true })
+const { copy, copied: isCopied } = useClipboard({ legacy: true })
 const copyIcon = computed(() => isCopied.value ? 'heroicons:check' : 'heroicons:clipboard-document')
 
 const handleUndo = () => {
   if (editorView.value) {
-    editorView.value.contentDOM.focus()
-    document.execCommand('undo')
+    undo(editorView.value as any)
   }
 }
 
 const handleRedo = () => {
   if (editorView.value) {
-    editorView.value.contentDOM.focus()
-    document.execCommand('redo')
+    redo(editorView.value as any)
   }
 }
 
