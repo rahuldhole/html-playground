@@ -76,23 +76,7 @@
             <Icon :name="shareButtonText === 'Copied!' ? 'heroicons:check' : 'heroicons:share'" class="w-4 h-4" />
           </button>
           
-          <div v-if="showShareMenu" class="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-1.5 z-50">
-            <button @click="shareCode(); showShareMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-2 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
-              <Icon name="heroicons:code-bracket" class="w-4 h-4 text-indigo-500" />
-              <div class="flex flex-col items-start">
-                <span>Editable Link</span>
-                <span class="text-[9px] text-gray-400 dark:text-gray-500 font-normal">Share with code editor</span>
-              </div>
-            </button>
-            <div class="h-[1px] bg-gray-100 dark:bg-gray-700 my-1 mx-1"></div>
-            <button @click="shareOutput(); showShareMenu = false" class="w-full flex items-center gap-2.5 px-2.5 py-2 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
-              <Icon name="heroicons:globe-alt" class="w-4 h-4 text-green-500" />
-              <div class="flex flex-col items-start text-left">
-                <span>Publish Link</span>
-                <span class="text-[9px] text-gray-400 dark:text-gray-500 font-normal leading-tight mt-0.5">Share as read-only app<br/>(Ctrl+Shift+E to edit)</span>
-              </div>
-            </button>
-          </div>
+          <EditorSharePopover v-model="showShareMenu" />
         </div>
         
         <button @click="toggleFullscreenHandler"
@@ -134,6 +118,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, onUnmounted } from 'vue'
 import EditorDropdownMenu from './EditorDropdownMenu.vue'
+import EditorSharePopover from './SharePopover.vue'
 import html2canvas from 'html2canvas'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'

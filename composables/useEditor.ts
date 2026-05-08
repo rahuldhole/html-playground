@@ -54,12 +54,57 @@ export function useEditor() {
     if(code) editorStore.setHtmlCode(code)
   }
 
+  const getShortenedUrl = async (url: string): Promise<string> => {
+    try {
+      const data = await $fetch<{ shortUrl?: string, error?: string }>('/api/shorten', {
+        method: 'POST',
+        body: { url }
+      })
+      return data.shortUrl || url
+    } catch (err) {
+      console.error('Shortening failed:', err)
+      return url
+    }
+  }
+
+  const generateShareUrl = async (type: 'editable' | 'publish'): Promise<string> => {
+    const compressedCode = await compress(editorStore.htmlCode)
+    const base64CompressedCode = btoa(compressedCode)
+    const encodedCode = encodeURIComponent(base64CompressedCode)
+    
+    if (type === 'editable') {
+      return `${window.location.origin}/publish#code=${encodedCode}`
+    } else {
+      return `${window.location.origin}/publish?publish=true#code=${encodedCode}`
+    }
+  }
+
+  const shortenUrl = async (url: string): Promise<{ shortUrl?: string, isDev?: boolean, error?: string }> => {
+    try {
+      // Using axios with allorigins proxy to bypass CORS
+      const axios = (await import('axios')).default;
+      const targetUrl = `https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`;
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+      
+      const response = await axios.get(proxyUrl);
+      const data = response.data;
+      
+      // Allorigins wraps the response in a 'contents' field
+      if (data.contents && data.contents.startsWith('http')) {
+        console.log("Shortened URL:", data.contents);
+        return { shortUrl: data.contents };
+      } else {
+        return { error: 'Invalid response from shortening service.' };
+      }
+    } catch (e: any) {
+      console.error("Shortening failed", e);
+      return { error: 'CORS/API Error: Could not reach the shortener.' };
+    }
+  }
+
   // Share code function using hash
   const shareCode = async () => {
-    const compressedCode = await compress(editorStore.htmlCode)
-    const base64CompressedCode = btoa(compressedCode)  // Convert to Base64
-    const encodedCode = encodeURIComponent(base64CompressedCode)  // Encode URI
-    const shareUrl = `${window.location.origin}/publish#code=${encodedCode}`
+    const shareUrl = await generateShareUrl('editable')
     try {
       await copy(shareUrl)
       generateQr(shareUrl)
@@ -74,10 +119,7 @@ export function useEditor() {
 
   // Share publish function using hash
   const shareOutput = async () => {
-    const compressedCode = await compress(editorStore.htmlCode)
-    const base64CompressedCode = btoa(compressedCode)  // Convert to Base64
-    const encodedCode = encodeURIComponent(base64CompressedCode)  // Encode URI
-    const shareUrl = `${window.location.origin}/publish?publish=true#code=${encodedCode}`
+    const shareUrl = await generateShareUrl('publish')
     try {
       await copy(shareUrl)
       generateQr(shareUrl)
@@ -191,6 +233,8 @@ ${editorStore.htmlCode}
   return {
     getCodeFromUrl,
     loadEditorFromUrl,
+    generateShareUrl,
+    shortenUrl,
     shareCode,
     shareOutput,
     updateUrlWithCode,

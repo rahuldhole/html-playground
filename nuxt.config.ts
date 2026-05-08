@@ -72,6 +72,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     openRouterKey: process.env.NUXT_OPEN_ROUTER_KEY || '',
     triggerSecretKey: process.env.NUXT_TRIGGER_SECRET_KEY || '',
-    disableTriggerDev: process.env.NUXT_DISABLE_TRIGGER_DEV === 'true' || false
+    disableTriggerDev: process.env.NUXT_DISABLE_TRIGGER_DEV === 'true' || false,
+    tinyUrlToken: process.env.NUXT_TINYURL_TOKEN || ''
   }
 });
