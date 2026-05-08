@@ -49,6 +49,15 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
         .orb-2 { width: 45vw; height: 45vw; background: radial-gradient(circle, var(--secondary) 0%, transparent 60%); bottom: -15%; right: -15%; animation-duration: 25s; }
         .orb-3 { width: 40vw; height: 40vw; background: radial-gradient(circle, var(--accent) 0%, transparent 60%); top: 30%; left: 30%; animation-duration: 22s; animation-delay: -5s; }
 
+        #particles-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
         @keyframes float-orb {
             0% { transform: translate(0, 0) scale(1); }
             100% { transform: translate(15vw, 10vh) scale(1.2); }
@@ -342,8 +351,9 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
             display: flex;
             justify-content: center;
             gap: 2rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
             width: 100%;
             animation: bar-elegant-sway 6s ease-in-out infinite;
         }
@@ -403,6 +413,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
     </style>
 </head>
 <body>
+    <canvas id="particles-bg"></canvas>
     <div class="ambient-orb orb-1"></div>
     <div class="ambient-orb orb-2"></div>
     <div class="ambient-orb orb-3"></div>
@@ -410,6 +421,12 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
     <div class="main-card">
         <div class="glow-line"></div>
         <div class="content">
+            <div class="frictionless-bar">
+                <div class="friction-item"><div class="dot"></div> NO SIGN UP</div>
+                <div class="friction-item"><div class="dot"></div> NO CREDIT CARD</div>
+                <div class="friction-item"><div class="dot"></div> 100% FREE</div>
+            </div>
+
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="icon-box">🤖</div>
@@ -442,13 +459,256 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
                     <p>No credit cards, no hidden fees. Just pure, unadulterated web creativity.</p>
                 </div>
             </div>
-
-            <div class="frictionless-bar">
-                <div class="friction-item"><div class="dot"></div> NO SIGN UP</div>
-                <div class="friction-item"><div class="dot"></div> NO CREDIT CARD</div>
-                <div class="friction-item"><div class="dot"></div> 100% FREE</div>
-            </div>
         </div>
     </div>
+
+    <script>
+        // Highly optimized particle system that won't block the JS thread
+        const canvas = document.getElementById('particles-bg');
+        const ctx = canvas.getContext('2d', { alpha: true });
+        
+        let width, height;
+        const particles = [];
+        const shootingStars = [];
+        const spaceships = [];
+        const particleCount = 80; // Kept low for maximum performance
+        const shootingStarCount = 4; // Subtle number of shooting stars
+        const spaceshipCount = 2; // A couple of spaceships
+        
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Initialize particles with theme colors
+        const colors = ['#c084fc', '#22d3ee', '#f472b6'];
+        const neonColorsRGB = ['192, 132, 252', '34, 211, 238', '244, 114, 182']; // RGB format for gradients
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5, // Horizontal drift
+                vy: Math.random() * 1.5 + 0.5,   // Falling speed (gravity)
+                size: Math.random() * 2 + 1.5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: Math.random() * 0.7 + 0.3,
+                angle: Math.random() * Math.PI * 2 // For swaying effect
+            });
+        }
+
+        // Initialize shooting stars (left to right)
+        for (let i = 0; i < shootingStarCount; i++) {
+            shootingStars.push({
+                x: Math.random() * width,
+                y: Math.random() * height * 0.7,
+                length: Math.random() * 150 + 80, // Bigger
+                speed: Math.random() * 10 + 8,
+                thickness: Math.random() * 2.5 + 1.5, // Thicker
+                opacity: Math.random() * 0.5 + 0.5, // More visible
+                colorRGB: neonColorsRGB[Math.floor(Math.random() * neonColorsRGB.length)] // Random multicolor
+            });
+        }
+
+        // Initialize spaceships (right to left)
+        for (let i = 0; i < spaceshipCount; i++) {
+            spaceships.push({
+                x: width + Math.random() * 500,
+                y: Math.random() * height * 0.8 + height * 0.1,
+                speed: Math.random() * 1.5 + 1,
+                size: Math.random() * 8 + 8,
+                colorRGB: neonColorsRGB[Math.floor(Math.random() * neonColorsRGB.length)],
+                lasers: [],
+                framesSinceLastShot: Math.floor(Math.random() * 60)
+            });
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Render shooting stars
+            for (let i = 0; i < shootingStarCount; i++) {
+                let star = shootingStars[i];
+                
+                // Move right and slightly down
+                star.x += star.speed;
+                star.y += star.speed * 0.2;
+
+                // Wrap around to the left side
+                if (star.x > width + star.length) {
+                    star.x = -star.length;
+                    star.y = Math.random() * height * 0.8;
+                    star.speed = Math.random() * 10 + 8;
+                    star.length = Math.random() * 150 + 80;
+                    star.thickness = Math.random() * 2.5 + 1.5;
+                    star.colorRGB = neonColorsRGB[Math.floor(Math.random() * neonColorsRGB.length)];
+                }
+
+                // Draw shooting star tail (gradient)
+                const tailX = star.x - star.length;
+                const tailY = star.y - (star.length * 0.2);
+                
+                const grad = ctx.createLinearGradient(star.x, star.y, tailX, tailY);
+                grad.addColorStop(0, \`rgba(\${star.colorRGB}, \${star.opacity})\`);
+                grad.addColorStop(1, \`rgba(\${star.colorRGB}, 0)\`);
+
+                ctx.beginPath();
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = star.thickness;
+                ctx.moveTo(star.x, star.y);
+                ctx.lineTo(tailX, tailY);
+                ctx.stroke();
+            }
+
+            // Render spaceships and lasers
+            for (let i = 0; i < spaceshipCount; i++) {
+                let ship = spaceships[i];
+                
+                // Move spaceship left
+                ship.x -= ship.speed;
+
+                // Reset if off-screen
+                if (ship.x < -100) {
+                    ship.x = width + Math.random() * 300;
+                    ship.y = Math.random() * height * 0.8 + height * 0.1;
+                    ship.lasers = [];
+                    ship.colorRGB = neonColorsRGB[Math.floor(Math.random() * neonColorsRGB.length)];
+                }
+
+                // Shoot laser occasionally
+                ship.framesSinceLastShot++;
+                if (ship.framesSinceLastShot > 60 && Math.random() < 0.03) {
+                    ship.lasers.push({ x: ship.x - ship.size, y: ship.y });
+                    ship.framesSinceLastShot = 0;
+                }
+
+                // Draw and move lasers
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = \`rgba(\${ship.colorRGB}, 0.9)\`;
+                ctx.beginPath();
+                for (let j = ship.lasers.length - 1; j >= 0; j--) {
+                    let laser = ship.lasers[j];
+                    laser.x -= ship.speed * 4; // Lasers travel much faster
+                    ctx.moveTo(laser.x, laser.y);
+                    ctx.lineTo(laser.x + 15, laser.y);
+                    if (laser.x < -50) ship.lasers.splice(j, 1);
+                }
+                ctx.stroke();
+
+                // Draw spaceship (Geometric left-facing stealth shape)
+                ctx.fillStyle = \`rgba(\${ship.colorRGB}, 0.8)\`;
+                ctx.beginPath();
+                ctx.moveTo(ship.x - ship.size, ship.y); // tip
+                ctx.lineTo(ship.x + ship.size, ship.y - ship.size * 0.7); // top back wing
+                ctx.lineTo(ship.x + ship.size * 0.4, ship.y); // center back indent
+                ctx.lineTo(ship.x + ship.size, ship.y + ship.size * 0.7); // bottom back wing
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Render 10 elegant dancers
+            const t = Date.now() * 0.0015;
+            
+            function drawElegantDancer(x, y, timeOffset, scale, color) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.scale(scale, scale);
+
+                // Smooth, flowing time multiplier
+                const phase = (t * 2 + timeOffset);
+
+                // Gentle bounce
+                const bounce = Math.abs(Math.sin(phase * 2)) * 5;
+                ctx.translate(0, -bounce);
+
+                // Graceful sway
+                const sway = Math.sin(phase) * 0.15;
+                ctx.rotate(sway);
+
+                // Flowing arms
+                const arm1X = Math.cos(phase) * 20;
+                const arm1Y = Math.sin(phase * 1.5) * 15 - 10;
+                const arm2X = -Math.cos(phase * 1.2) * 20;
+                const arm2Y = Math.sin(phase * 1.3) * 15 - 10;
+
+                // Elegant steps
+                const leg1X = Math.sin(phase * 2) * 15;
+                const leg1Y = Math.abs(Math.cos(phase * 2)) * 5 + 20;
+                const leg2X = -Math.sin(phase * 2) * 15;
+                const leg2Y = Math.abs(Math.sin(phase * 2)) * 5 + 20;
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3; // Increased thickness for visibility
+                ctx.shadowBlur = 15; // Added shiny glow
+                ctx.shadowColor = color;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+
+                // Head
+                ctx.arc(0, -30, 7, 0, Math.PI * 2);
+
+                // Body
+                ctx.moveTo(0, -23); ctx.lineTo(0, 0);
+                
+                // Arms
+                ctx.moveTo(0, -15); ctx.lineTo(arm1X, arm1Y);
+                ctx.moveTo(0, -15); ctx.lineTo(arm2X, arm2Y);
+                
+                // Legs
+                ctx.moveTo(0, 0); ctx.lineTo(leg1X, leg1Y);
+                ctx.moveTo(0, 0); ctx.lineTo(leg2X, leg2Y);
+
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Distribute 10 dancers across the bottom
+            const spacing = width / 11;
+            for (let k = 0; k < 10; k++) {
+                const xPos = spacing * (k + 1) + (Math.sin(t + k) * 10); // Gentle lateral sway
+                const yPos = height - 15;
+                const timeOff = k * 0.8; // Smoother phase difference
+                const scale = 0.7 + (k % 3) * 0.15; // Varied sizes
+                const color = \`rgba(\${neonColorsRGB[k % neonColorsRGB.length]}, 1)\`; // Full opacity for shine
+                
+                drawElegantDancer(xPos, yPos, timeOff, scale, color);
+            }
+
+            // Render snowfall
+            // Important: Reset shadow before drawing other particles to prevent performance hit
+            ctx.shadowBlur = 0;
+            
+            for (let i = 0; i < particleCount; i++) {
+                let p = particles[i];
+                
+                // Swaying motion
+                p.angle += 0.02;
+                p.x += Math.sin(p.angle) * 0.5 + p.vx;
+                p.y += p.vy;
+
+                // Snowfall wrap-around
+                if (p.x < -p.size) p.x = width;
+                if (p.x > width + p.size) p.x = 0;
+                if (p.y > height) {
+                    p.y = -p.size; // Reset to top
+                    p.x = Math.random() * width; // Randomize horizontal position
+                }
+
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                // fillRect is significantly faster than drawing arcs/circles
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            
+            requestAnimationFrame(render);
+        }
+        
+        render();
+    </script>
 </body>
 </html>`;
