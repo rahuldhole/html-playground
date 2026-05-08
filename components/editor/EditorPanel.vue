@@ -233,7 +233,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useMagicKeys, useFullscreen, useClipboard, useWindowSize } from '@vueuse/core'
-import { undo, redo, history } from '@codemirror/commands'
+import { undo, redo } from '@codemirror/commands'
 import { useColorMode } from '#imports'
 import { basicSetup } from 'codemirror'
 import { EditorView } from '@codemirror/view'
