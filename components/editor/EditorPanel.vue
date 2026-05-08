@@ -277,7 +277,8 @@ const handleAISubmit = async () => {
   abortController.value = new AbortController()
   
   try {
-    const response = await fetch("/api/ai", {
+    // 1. Trigger the background task
+    const triggerResponse = await fetch("/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -289,44 +290,56 @@ const handleAISubmit = async () => {
       })
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.statusMessage || 'API request failed')
+    if (!triggerResponse.ok) {
+      const errorData = await triggerResponse.json()
+      throw new Error(errorData.statusMessage || 'Failed to trigger AI task')
     }
 
-    const reader = response.body?.getReader()
-    if (!reader) throw new Error('Response body is null')
-
-    let accumulatedCode = ''
-    const decoder = new TextDecoder()
+    const { runId } = await triggerResponse.json()
     
     // Clear prompt and close popup but keep loading state
     showAIPopup.value = false
     aiPrompt.value = ''
 
-    try {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        const chunk = decoder.decode(value, { stream: true })
-        accumulatedCode += chunk
-        
-        // Update store with current accumulated code
-        // We strip markdown blocks if they start appearing
-        let displayCode = accumulatedCode
-        if (displayCode.startsWith('```')) {
-            displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
-        }
-        editorStore.setHtmlCode(displayCode)
+    // 2. Poll for the result
+    let finished = false
+    let attempts = 0
+    const maxAttempts = 60 // 2 minutes with 2s interval
+
+    while (!finished && attempts < maxAttempts) {
+      if (abortController.value?.signal.aborted) break
+
+      const statusResponse = await fetch(`/api/ai-status?runId=${runId}`, {
+        signal: abortController.value?.signal
+      })
+
+      if (!statusResponse.ok) {
+        throw new Error('Failed to check task status')
       }
-    } finally {
-      reader.releaseLock()
+
+      const statusData = await statusResponse.json()
+
+      if (statusData.status === 'COMPLETED') {
+        const finalCode = statusData.output?.code
+        if (finalCode) {
+          editorStore.setHtmlCode(finalCode)
+        }
+        finished = true
+      } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(statusData.status)) {
+        throw new Error(statusData.error || `Task failed with status: ${statusData.status}`)
+      } else {
+        // Still running, wait and poll again
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        attempts++
+      }
+    }
+
+    if (!finished && attempts >= maxAttempts) {
+      throw new Error('Generation timed out. Please try again.')
     }
 
     isAILoading.value = false
     abortController.value = null
-
 
   } catch (error: any) {
     if (error.name === 'AbortError') {
@@ -339,6 +352,7 @@ const handleAISubmit = async () => {
     abortController.value = null
   }
 }
+
 
 // Clipboard logic
 const { copy, copied: isCopied } = useClipboard({ legacy: true })
