@@ -310,12 +310,21 @@ const handleCancelAI = async () => {
 const handleAISubmit = async () => {
   if (isAILoading.value || !aiPrompt.value) return
   
+  // Abort any previous ongoing request
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+
   isAILoading.value = true
   aiStatusText.value = 'Thinking...'
   aiReasoning.value = ''
-  abortController.value = new AbortController()
+  
+  const controller = new AbortController()
+  abortController.value = controller
+  const signal = controller.signal
   
   try {
+    console.log('Initiating AI request...')
     const response = await fetch("/api/ai", {
       method: "POST",
       headers: {
@@ -329,8 +338,8 @@ const handleAISubmit = async () => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.statusMessage || 'API request failed')
+      const errorData = await response.json().catch(() => ({ statusMessage: 'Unknown error' }))
+      throw new Error(errorData.statusMessage || `API request failed with status ${response.status}`)
     }
 
     const contentType = response.headers.get("content-type") || ""
@@ -338,6 +347,7 @@ const handleAISubmit = async () => {
     // Check if it's a Trigger.dev runId response (JSON) or a Stream (Text)
     if (contentType.includes("application/json")) {
       const { runId, publicToken } = await response.json()
+      console.log('Trigger.dev run initiated:', runId)
       currentRunId.value = runId
       
       // Configure the SDK with the public token for this session
@@ -352,10 +362,14 @@ const handleAISubmit = async () => {
         // Start reading the reasoning stream
         const reasoningStreamPromise = (async () => {
           try {
+            console.log('Starting reasoning stream for:', runId)
             const stream = await streams.read(runId, "ai-reasoning")
             for await (const chunk of stream) {
+              if (signal.aborted) {
+                console.log('Reasoning stream aborted')
+                break
+              }
               aiReasoning.value += chunk
-              if (abortController.value?.signal.aborted) break
             }
           } catch (err) {
             console.error("Error reading reasoning stream:", err)
@@ -365,9 +379,15 @@ const handleAISubmit = async () => {
         // Start reading the code stream in parallel to the run subscription
         const streamPromise = (async () => {
           try {
+            console.log('Starting output stream for:', runId)
             const stream = await streams.read(runId, "ai-output")
             let hasStarted = false
             for await (const chunk of stream) {
+              if (signal.aborted) {
+                console.log('Output stream aborted')
+                break
+              }
+              
               if (!hasStarted) {
                 hasStarted = true
                 showAIPopup.value = false
@@ -381,8 +401,6 @@ const handleAISubmit = async () => {
                 displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
               }
               editorStore.setHtmlCode(displayCode)
-              
-              if (abortController.value?.signal.aborted) break
             }
           } catch (err) {
             console.error("Error reading output stream:", err)
@@ -391,30 +409,28 @@ const handleAISubmit = async () => {
 
         // This is an Async Iterator that yields updates via WebSockets
         for await (const run of runs.subscribeToRun(runId)) {
+          console.log('Run status update:', run.status)
           aiStatusText.value = run.status || 'Thinking...'
 
           if (run.status === 'COMPLETED') {
-            // No need to wait for streams, the run output is the final source of truth
-            // and the streams will finish in the background anyway.
-            
+            console.log('Run completed:', runId)
             const finalCode = (run.output as any)?.code
             if (finalCode) {
               editorStore.setHtmlCode(finalCode)
             }
-            break // Stop listening once finished
+            break 
           } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
             throw new Error(`Task failed with status: ${run.status}`)
           }
           
-          // Check if user cancelled via the abort controller
-          if (abortController.value?.signal.aborted) break
+          if (signal.aborted) break
         }
       } catch (err: any) {
         alert(`AI Error: ${err.message}`)
       } finally {
         isAILoading.value = false
         aiStatusText.value = 'Thinking...'
-        abortController.value = null
+        // Keep abortController so it can be aborted if a new request starts before old loops finish
         currentRunId.value = null
       }
     } else {
@@ -431,7 +447,7 @@ const handleAISubmit = async () => {
         let hasStarted = false
         while (true) {
           const { done, value } = await reader.read()
-          if (done || abortController.value?.signal.aborted) break
+          if (done || signal.aborted) break
           
           if (!hasStarted) {
             hasStarted = true
@@ -466,7 +482,6 @@ const handleAISubmit = async () => {
     alert(`Error: ${error.message || 'Failed to connect to AI'}`)
     isAILoading.value = false
     aiStatusText.value = 'Thinking...'
-    abortController.value = null
     currentRunId.value = null
   }
 }

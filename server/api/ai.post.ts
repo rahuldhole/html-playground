@@ -5,6 +5,7 @@ import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
   const { prompt, code } = await readBody(event)
+  console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..."`)
   const config = useRuntimeConfig()
 
   // Ensure Trigger.dev is configured if key is available
