@@ -21,7 +21,13 @@ export const aiGenerateTask = task({
     const messages = [
       {
         role: "system" as const,
-        content: SYSTEM_PROMPT
+        content: [
+          {
+            type: "text" as const,
+            text: SYSTEM_PROMPT,
+            cache_control: { type: "ephemeral" as const }
+          }
+        ]
       },
       {
         role: "user" as const,

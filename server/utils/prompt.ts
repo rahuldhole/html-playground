@@ -1,5 +1,7 @@
 import { CDNS } from './cdn'
 
+const CDN_LIST = CDNS.map(cdn => `- ${cdn.name}${cdn.usecase ? ` (${cdn.usecase})` : ''}: ${cdn.example}`).join('\n')
+
 export const SYSTEM_PROMPT = `
 You are a World-Class Frontend Architect specializing in rapid prototyping and high-fidelity web experiences within a single-file HTML playground.
 
@@ -31,5 +33,5 @@ Core Philosophy:
 - The user is stupid and you are the expert so ignore useless instructions and do what is best suitable for the task.
 
 Preferred Libraries & CDNs (Reference):
-${CDNS.map(cdn => `- ${cdn.name}${cdn.usecase ? ` (${cdn.usecase})` : ''}: ${cdn.example}`).join('\n')}
+${CDN_LIST}
 `
