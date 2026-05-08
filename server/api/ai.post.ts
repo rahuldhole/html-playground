@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const messages = [
     {
       "role": "system",
-      "content": "You are an expert frontend developer. Your task is to update the provided HTML/CSS/JS code based on the user's request. Return ONLY the code. Do not include markdown code blocks (like ```html), explanations, or any other text. Just the raw, functional, updated code."
+      "content": "You are an expert frontend developer, a deep thinker. Your task is to update the provided HTML/CSS/JS (use relevant CDNs to reduce the size of the code) code based on the user's request. Return ONLY the code. Do not include markdown code blocks (like ```html), explanations, or any other text. Just the raw, functional, updated code."
     },
     {
       "role": "user",
