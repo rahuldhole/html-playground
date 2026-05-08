@@ -5,7 +5,7 @@
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
           <Icon name="heroicons:code-bracket" class="w-3.5 h-3.5" />
-          <span>Editor</span>
+          <span v-if="!isCompact">Editor</span>
         </div>
         
         <!-- Actions -->
@@ -16,7 +16,7 @@
               <button @click.stop="showMenuPopup = !showMenuPopup"
                 class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm">
                 <Icon name="heroicons:squares-plus" class="w-3.5 h-3.5" />
-                <span>Templates</span>
+                <span v-if="!isCompact">Templates</span>
               </button>
               <BoilerplateMenu v-model="showMenuPopup" @select="loadBoilerplate" />
             </div>
@@ -26,7 +26,7 @@
                 class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
                 :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'">
                 <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
-                <span>AI</span>
+                <span v-if="!isCompact">AI</span>
               </button>
               
               <!-- AI Prompt Popup -->
@@ -232,7 +232,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { useMagicKeys, useFullscreen, useClipboard, useWindowSize } from '@vueuse/core'
+import { useMagicKeys, useFullscreen, useClipboard, useElementSize } from '@vueuse/core'
 import { useColorMode } from '#imports'
 import { basicSetup } from 'codemirror'
 import { EditorView } from '@codemirror/view'
@@ -249,8 +249,11 @@ const editorStore = useEditorStore()
 const { shareCode, saveCode, runCode, shareButtonText } = useEditor()
 
 // Responsiveness
-const { width: windowWidth } = useWindowSize()
-const isMobile = computed(() => windowWidth.value < 768)
+const container = ref<HTMLElement | null>(null)
+const { width: containerWidth } = useElementSize(container)
+const isCompact = computed(() => containerWidth.value < 650)
+const isNarrow = computed(() => containerWidth.value < 400)
+const isMobile = isNarrow 
 const showMobileMenu = ref(false)
 
 // AI Assistant
@@ -388,7 +391,7 @@ const handleClear = () => {
 }
 
 // Template refs
-const container = ref<HTMLElement | null>(null)
+// container ref is already defined above in Responsiveness section
 const editorContainer = ref<HTMLElement | null>(null)
 const editorView = ref<EditorView | null>(null)
 const aiInput = ref<HTMLTextAreaElement | null>(null)

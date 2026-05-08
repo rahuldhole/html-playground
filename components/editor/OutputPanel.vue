@@ -5,7 +5,7 @@
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
           <Icon name="heroicons:globe-alt" class="w-3.5 h-3.5" />
-          <span>Preview</span>
+          <span v-if="!isCompact">Preview</span>
         </div>
         
         <!-- Navigation -->
@@ -105,15 +105,17 @@ import html2canvas from 'html2canvas'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'
 import { useFullScreenStore } from '~/stores/fullScreenStore'
-import { useFullscreen, useWindowSize } from '@vueuse/core'
+import { useFullscreen, useElementSize } from '@vueuse/core'
 
 const container = ref<HTMLElement | null>(null)
 const outputFrame = ref<HTMLIFrameElement | null>(null)
 const editorStore = useEditorStore()
 
 // Responsiveness
-const { width: windowWidth } = useWindowSize()
-const isMobile = computed(() => windowWidth.value < 768)
+const { width: containerWidth } = useElementSize(container)
+const isCompact = computed(() => containerWidth.value < 500)
+const isNarrow = computed(() => containerWidth.value < 400)
+const isMobile = isNarrow
 const showMobileMenu = ref(false)
 
 const { getCodeFromUrl, shareOutput, updateOutput, shareButtonText } = useEditor()
