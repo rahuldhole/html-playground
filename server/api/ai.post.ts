@@ -1,4 +1,6 @@
 import { OpenRouter } from '@openrouter/sdk'
+import { tasks } from "@trigger.dev/sdk/v3"
+import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
   const { prompt, code } = await readBody(event)
@@ -11,6 +13,28 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Handle Trigger.dev Offloading if enabled
+  if (config.enableTriggerDev) {
+    try {
+      const handle = await tasks.trigger<typeof aiGenerateTask>("ai-generate", {
+        prompt,
+        code,
+        apiKey: config.openRouterKey
+      })
+
+      return {
+        runId: handle.id
+      }
+    } catch (error: any) {
+      console.error('Trigger.dev Error:', error.message)
+      throw createError({
+        statusCode: 500,
+        statusMessage: error.message || 'Failed to trigger background task'
+      })
+    }
+  }
+
+  // Standard Streaming Implementation
   const sdk = new OpenRouter({
     apiKey: config.openRouterKey,
   })
@@ -67,7 +91,6 @@ Core Philosophy:
     let accumulated = ''
     let sentIndex = 0
 
-    // Create a ReadableStream that extracts only the content delta
     const responseStream = new ReadableStream({
       async start(controller) {
         try {
@@ -75,12 +98,7 @@ Core Philosophy:
             const content = chunk.choices?.[0]?.delta?.content
             if (content) {
               accumulated += content
-              
-              // Strip out markdown code block syntax globally
               let tempCleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '')
-              
-              // Hold back 25 characters to prevent sending partial markdown blocks 
-              // that might be resolved differently as more chunks arrive.
               const safeToSendLength = Math.max(0, tempCleaned.length - 25)
               
               if (safeToSendLength > sentIndex) {
@@ -91,7 +109,6 @@ Core Philosophy:
             }
           }
           
-          // Stream finished, flush the remaining text
           let finalCleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '')
           if (finalCleaned.length > sentIndex) {
             controller.enqueue(new TextEncoder().encode(finalCleaned.slice(sentIndex)))
@@ -104,7 +121,6 @@ Core Philosophy:
       }
     })
 
-    // Set appropriate headers for streaming
     setResponseHeaders(event, {
       'Content-Type': 'text/plain; charset=utf-8',
       'Transfer-Encoding': 'chunked',
@@ -121,4 +137,5 @@ Core Philosophy:
     })
   }
 })
+
 

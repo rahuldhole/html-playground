@@ -295,40 +295,88 @@ const handleAISubmit = async () => {
       throw new Error(errorData.statusMessage || 'API request failed')
     }
 
-    const reader = response.body?.getReader()
-    if (!reader) throw new Error('Response body is null')
-
-    let accumulatedCode = ''
-    const decoder = new TextDecoder()
+    const contentType = response.headers.get("content-type") || ""
     
-    // Clear prompt and close popup but keep loading state
-    showAIPopup.value = false
-    aiPrompt.value = ''
-    aiStatusText.value = 'Generating...'
+    // Check if it's a Trigger.dev runId response (JSON) or a Stream (Text)
+    if (contentType.includes("application/json")) {
+      const { runId } = await response.json()
+      
+      // Clear prompt and close popup but keep loading state
+      showAIPopup.value = false
+      aiPrompt.value = ''
+      aiStatusText.value = 'Initializing...'
 
-    try {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        const chunk = decoder.decode(value, { stream: true })
-        accumulatedCode += chunk
-        
-        // Update store with current accumulated code
-        // We strip markdown blocks if they start appearing
-        let displayCode = accumulatedCode
-        if (displayCode.startsWith('```')) {
-            displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+      // Poll for the result
+      let finished = false
+      let attempts = 0
+      const maxAttempts = 60 // 2 minutes with 2s interval
+
+      while (!finished && attempts < maxAttempts) {
+        if (abortController.value?.signal.aborted) break
+
+        const statusResponse = await fetch(`/api/ai-status?runId=${runId}`, {
+          signal: abortController.value?.signal
+        })
+
+        if (!statusResponse.ok) {
+          throw new Error('Failed to check task status')
         }
-        editorStore.setHtmlCode(displayCode)
+
+        const statusData = await statusResponse.json()
+        aiStatusText.value = statusData.status || 'Thinking...'
+
+        if (statusData.status === 'COMPLETED') {
+          const finalCode = statusData.output?.code
+          if (finalCode) {
+            editorStore.setHtmlCode(finalCode)
+          }
+          finished = true
+        } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(statusData.status)) {
+          throw new Error(statusData.error || `Task failed with status: ${statusData.status}`)
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          attempts++
+        }
       }
-    } finally {
-      reader.releaseLock()
+
+      if (!finished && attempts >= maxAttempts) {
+        throw new Error('Generation timed out. Please check if your Trigger.dev worker is running.')
+      }
+    } else {
+      // Direct Stream implementation
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('Response body is null')
+
+      let accumulatedCode = ''
+      const decoder = new TextDecoder()
+      
+      showAIPopup.value = false
+      aiPrompt.value = ''
+      aiStatusText.value = 'Generating...'
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value, { stream: true })
+          accumulatedCode += chunk
+          
+          let displayCode = accumulatedCode
+          if (displayCode.startsWith('```')) {
+              displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
+          }
+          editorStore.setHtmlCode(displayCode)
+        }
+      } finally {
+        reader.releaseLock()
+      }
     }
 
     isAILoading.value = false
     aiStatusText.value = 'Thinking...'
     abortController.value = null
+
 
   } catch (error: any) {
     if (error.name === 'AbortError') {
