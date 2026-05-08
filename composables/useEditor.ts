@@ -90,27 +90,28 @@ export function useEditor() {
     }
   }
 
+  let currentBlobUrl: string | null = null
+
   // Function to update output iframe with current code - now gets iframe directly
   const updateOutput = () => {
     const iframe = getOutputIframe()
     
     if (!iframe) {
       console.warn('Output iframe not found in DOM')
-      // We'll retry after a short delay
-      setTimeout(() => {
-        updateOutput()
-      }, 100)
       return
     }
     
     try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document
-      if (!doc) return
-      doc.open()
-      doc.write(`
+      // Clean up previous blob URL to prevent memory leaks
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl)
+      }
+
+      const fullHtml = `
         <!DOCTYPE html>
         <html style="height: 100%;">
         <head>
+          <meta charset="UTF-8">
           <style>
             html, body {
               margin: 0;
@@ -118,7 +119,7 @@ export function useEditor() {
               height: 100%;
               width: 100%;
               background-color: ${editorStore.isOutputDark ? 'oklch(0.278 0.033 256.848)' : '#ffffff'};
-              color: #000000;
+              color: ${editorStore.isOutputDark ? '#ffffff' : '#000000'};
               font-family: Arial, sans-serif;
             }
           </style>
@@ -127,8 +128,14 @@ export function useEditor() {
         ${editorStore.htmlCode}
         </body>
         </html>
-      `)
-      doc.close()
+      `
+
+      const blob = new Blob([fullHtml], { type: 'text/html' })
+      currentBlobUrl = URL.createObjectURL(blob)
+      
+      // Setting src is handled more gracefully by the browser's loading thread
+      // than synchronous doc.write
+      iframe.src = currentBlobUrl
     } catch (error) {
       console.error('Error updating output:', error)
     }
