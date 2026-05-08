@@ -37,6 +37,7 @@
     "brotli-wasm": "^3.0.1",
     "codemirror": "^6.0.1",
     "html2canvas": "^1.4.1",
+    "js-beautify": "^1.15.4",
     "nuxt": "^4.3.0",
     "nuxt-codemirror": "^0.0.12",
     "nuxt-gtag": "^3.0.2",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@trigger.dev/build": "^4.4.5",
+    "@types/js-beautify": "^1.14.3",
     "@types/node": "^25.6.1",
     "wrangler": "^4.90.0"
   }

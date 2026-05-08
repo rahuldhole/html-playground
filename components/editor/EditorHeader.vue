@@ -1,4 +1,21 @@
 <script setup lang="ts">
+import { useEditorStore } from '~/stores/editor'
+import js_beautify from 'js-beautify'
+
+const editorStore = useEditorStore()
+
+const handleBeautify = () => {
+  if (editorStore.htmlCode) {
+    const formatted = js_beautify.html(editorStore.htmlCode, {
+      indent_size: 2,
+      wrap_line_length: 0,
+      preserve_newlines: true,
+      max_preserve_newlines: 2,
+      end_with_newline: false
+    })
+    editorStore.setHtmlCode(formatted)
+  }
+}
 </script>
 <template>
   <header class="bg-white dark:bg-gray-800 shadow-sm p-4 sticky top-0 z-10">
@@ -11,7 +28,10 @@
           PoW IDE
         </h1>
       </div>
-      <div class="flex gap-4">
+      <div class="flex gap-4 items-center">
+        <button @click="handleBeautify" class="text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Beautify Code">
+          <Icon name="lucide:wand-2" class="w-6 h-6" />
+        </button>
         <a href="https://github.com/playonweb/pow-ide/issues" target="_blank" class="text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300">
           <p class="flex items-center gap-2">
             <Icon name="material-symbols:bug-report" class="w-6 h-6" />
@@ -24,4 +44,4 @@
       </div>
     </div>
   </header>
-</template> 
+</template>
