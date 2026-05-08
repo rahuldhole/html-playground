@@ -1,4 +1,4 @@
-import { task } from "@trigger.dev/sdk/v3";
+import { task, streams } from "@trigger.dev/sdk/v3";
 import { OpenRouter } from '@openrouter/sdk'
 
 export interface AIGenPayload {
@@ -56,19 +56,30 @@ Core Philosophy:
     ];
 
     try {
-      const completion = await sdk.chat.send({
+      const stream = await sdk.chat.send({
         appTitle: "Minimalist HTML IDE",
         chatRequest: {
-          model: "openrouter/free", // Or use a better model if needed
+          model: "openrouter/free", 
           messages: messages,
-          stream: false // We use non-streaming for the background task result
+          stream: true
         }
       });
 
-      const responseContent = completion.choices?.[0]?.message?.content || "";
+      let accumulated = '';
       
+      for await (const chunk of stream) {
+        const content = chunk.choices?.[0]?.delta?.content;
+        if (content) {
+          accumulated += content;
+          
+          // Publish the chunk to the Trigger.dev stream
+          // We use 'ai-output' as the stream key
+          await streams.append("ai-output", content);
+        }
+      }
+
       // Clean up markdown blocks if the AI ignored instructions
-      const cleaned = responseContent.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
+      const cleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
 
       return {
         code: cleaned

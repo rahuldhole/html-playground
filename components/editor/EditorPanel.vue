@@ -302,7 +302,7 @@ const handleAISubmit = async () => {
       const { runId, publicToken } = await response.json()
       
       // Configure the SDK with the public token for this session
-      const { runs, configure } = await import("@trigger.dev/sdk/v3")
+      const { runs, streams, configure } = await import("@trigger.dev/sdk/v3")
       configure({ accessToken: publicToken })
 
       showAIPopup.value = false
@@ -310,11 +310,37 @@ const handleAISubmit = async () => {
       aiStatusText.value = 'Initializing...'
 
       try {
+        let accumulatedCode = ''
+        
+        // Start reading the stream in parallel to the run subscription
+        const streamPromise = (async () => {
+          try {
+            const stream = await streams.read(runId, "ai-output")
+            for await (const chunk of stream) {
+              accumulatedCode += chunk
+              
+              let displayCode = accumulatedCode
+              // Clean up markdown blocks if they appear in the stream
+              if (displayCode.includes('```')) {
+                displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+              }
+              editorStore.setHtmlCode(displayCode)
+              
+              if (abortController.value?.signal.aborted) break
+            }
+          } catch (err) {
+            console.error("Error reading stream:", err)
+          }
+        })()
+
         // This is an Async Iterator that yields updates via WebSockets
         for await (const run of runs.subscribeToRun(runId)) {
           aiStatusText.value = run.status || 'Thinking...'
 
           if (run.status === 'COMPLETED') {
+            // Wait for the stream to finish processing just in case
+            await streamPromise
+            
             const finalCode = (run.output as any)?.code
             if (finalCode) {
               editorStore.setHtmlCode(finalCode)
