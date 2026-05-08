@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache ECharts Advanced Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/apacheecharts.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#0b0e14] text-white min-h-screen p-6 md:p-12">
+    <div class="max-w-6xl mx-auto space-y-12">
+        
+        <header class="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/10 pb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-tr from-red-500 to-orange-400 rounded-2xl flex items-center justify-center shadow-2xl shadow-red-500/20">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">ECharts Pro</h1>
+                    <p class="text-slate-500 font-medium">Enterprise Charting Solution</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 bg-white/5 p-2 rounded-2xl">
+                <div class="px-4 py-2 bg-red-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-red-500/20">Dark Mode</div>
+                <div class="px-4 py-2 text-slate-400 text-sm font-bold hover:text-white transition cursor-pointer">Light Mode</div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Dynamic Line Chart -->
+            <div class="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">Network Traffic</h2>
+                    <span class="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded-lg">Real-time</span>
+                </div>
+                <div id="line-chart" class="w-full h-[350px]"></div>
+            </div>
+
+            <!-- Radar Chart -->
+            <div class="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 space-y-6">
+                <h2 class="text-xl font-bold">Ability Profile</h2>
+                <div id="radar-chart" class="w-full h-[350px]"></div>
+            </div>
+        </div>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 rounded-[2rem] space-y-4">
+                <h3 class="text-lg font-bold text-indigo-100">Performance</h3>
+                <p class="text-4xl font-extrabold tracking-tight">99.2%</p>
+                <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+                    <div class="w-[99.2%] bg-white h-full"></div>
+                </div>
+            </div>
+            <div class="bg-white/5 p-8 rounded-[2rem] border border-white/10 flex items-center justify-between">
+                <div class="space-y-1">
+                    <p class="text-slate-500 text-sm font-bold uppercase tracking-widest">Active nodes</p>
+                    <p class="text-3xl font-bold">1,204</p>
+                </div>
+                <div class="w-12 h-12 rounded-full border-2 border-red-500/50 flex items-center justify-center">
+                    <div class="w-4 h-4 rounded-full bg-red-500 animate-ping"></div>
+                </div>
+            </div>
+            <div class="bg-white/5 p-8 rounded-[2rem] border border-white/10 space-y-2">
+                <p class="text-slate-500 text-sm font-bold uppercase tracking-widest">System Load</p>
+                <p class="text-3xl font-bold">2.4<span class="text-slate-600 text-lg">/5.0</span></p>
+                <div class="flex gap-1">
+                    <div class="flex-1 h-1 bg-red-500 rounded-full"></div>
+                    <div class="flex-1 h-1 bg-red-500 rounded-full"></div>
+                    <div class="flex-1 h-1 bg-white/10 rounded-full"></div>
+                    <div class="flex-1 h-1 bg-white/10 rounded-full"></div>
+                    <div class="flex-1 h-1 bg-white/10 rounded-full"></div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Line Chart
+        const lineChart = echarts.init(document.getElementById('line-chart'), 'dark');
+        const lineOption = {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis' },
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
+            },
+            series: [{
+                name: 'Traffic',
+                type: 'line',
+                smooth: true,
+                data: [120, 132, 101, 134, 90, 230, 210],
+                lineStyle: { width: 4, color: '#f87171' },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(248, 113, 113, 0.3)' },
+                        { offset: 1, color: 'rgba(248, 113, 113, 0)' }
+                    ])
+                },
+                itemStyle: { color: '#f87171' }
+            }]
+        };
+        lineChart.setOption(lineOption);
+
+        // Radar Chart
+        const radarChart = echarts.init(document.getElementById('radar-chart'), 'dark');
+        const radarOption = {
+            backgroundColor: 'transparent',
+            radar: {
+                indicator: [
+                    { name: 'Speed', max: 6500 },
+                    { name: 'Stability', max: 16000 },
+                    { name: 'Efficiency', max: 30000 },
+                    { name: 'UX', max: 38000 },
+                    { name: 'Scalability', max: 52000 },
+                    { name: 'Security', max: 25000 }
+                ],
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                splitArea: { show: false }
+            },
+            series: [{
+                name: 'Performance',
+                type: 'radar',
+                data: [{
+                    value: [4200, 3000, 20000, 35000, 50000, 18000],
+                    name: 'Current Build'
+                }],
+                itemStyle: { color: '#f87171' },
+                areaStyle: { opacity: 0.3 }
+            }]
+        };
+        radarChart.setOption(radarOption);
+
+        window.addEventListener('resize', () => {
+            lineChart.resize();
+            radarChart.resize();
+        });
+    </script>
+</body>
+</html>

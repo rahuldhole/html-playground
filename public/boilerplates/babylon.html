@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js 3D Engine Showcase</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/babylondotjs.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        body { font-family: 'Outfit', sans-serif; margin: 0; overflow: hidden; background: #0f172a; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
+        .ui-panel {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .ui-panel * { pointer-events: auto; }
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="ui-panel space-y-6">
+        <header class="glass p-8 rounded-[2.5rem] shadow-2xl max-w-sm">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-900/20">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.628.314a2 2 0 01-1.798 0l-.628-.314a6 6 0 00-3.86-.517l-2.387.477a2 2 0 00-1.022.547l-1.161 1.161a2 2 0 00-.547 1.022l-.477 2.387a2 2 0 00.517 1.732l1.161 1.161a2 2 0 001.732.517l2.387-.477a2 2 0 001.022-.547l1.161-1.161a2 2 0 00.547-1.022l.477-2.387a2 2 0 00-.517-1.732l-1.161-1.161z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold text-white tracking-tight">Babylon Engine</h1>
+                    <p class="text-orange-400 text-xs font-bold uppercase tracking-widest">High Performance 3D</p>
+                </div>
+            </div>
+            <p class="text-slate-400 text-sm leading-relaxed mb-8">Create industrial-grade 3D experiences with the world's most powerful open-source web engine.</p>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="changeColor()" class="bg-white text-slate-900 px-4 py-3 rounded-2xl text-sm font-bold hover:bg-orange-500 hover:text-white transition-all shadow-lg">Morph Shape</button>
+                <button onclick="toggleWireframe()" class="glass text-white px-4 py-3 rounded-2xl text-sm font-bold hover:bg-white/10 transition-all">Wireframe</button>
+            </div>
+        </header>
+
+        <div class="glass p-4 rounded-2xl inline-flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span class="text-white text-xs font-bold tracking-widest uppercase">Engine Ready</span>
+        </div>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0.06, 0.09, 0.16, 1);
+
+            // Camera
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.wheelPrecision = 50;
+
+            // Lights
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 0.7;
+
+            const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(5, 5, 5), scene);
+            pointLight.intensity = 0.5;
+
+            // Animated Object
+            const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene);
+            const material = new BABYLON.StandardMaterial("material", scene);
+            material.diffuseColor = new BABYLON.Color3(1, 0.5, 0);
+            material.specularColor = new BABYLON.Color3(1, 1, 1);
+            box.material = material;
+
+            // Ground for shadows
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 20, height: 20 }, scene);
+            const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
+            groundMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.2);
+            ground.material = groundMaterial;
+            ground.position.y = -2;
+
+            // Animation
+            scene.registerBeforeRender(function () {
+                box.rotation.y += 0.01;
+                box.rotation.x += 0.005;
+                box.position.y = Math.sin(Date.now() / 1000) * 0.5;
+            });
+
+            window.box = box;
+            window.material = material;
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+
+        function changeColor() {
+            const r = Math.random();
+            const g = Math.random();
+            const b = Math.random();
+            window.material.diffuseColor = new BABYLON.Color3(r, g, b);
+        }
+
+        function toggleWireframe() {
+            window.material.wireframe = !window.material.wireframe;
+        }
+    </script>
+</body>
+</html>

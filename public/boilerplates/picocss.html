@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pico CSS Minimalist Showcase</title>
+    <!-- Pico CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/picocss.svg">
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --primary-focus: rgba(16, 185, 129, 0.125);
+            --primary-inverse: #FFF;
+        }
+        body { padding: 2rem 0; }
+        .hero-section { text-align: center; margin-bottom: 4rem; }
+        .grid-demo { margin-top: 3rem; }
+        card { padding: 1.5rem; border-radius: 1rem; }
+    </style>
+</head>
+<body>
+    <main class="container">
+        
+        <nav>
+            <ul>
+                <li><strong>Pico.css</strong></li>
+            </ul>
+            <ul>
+                <li><a href="#">Docs</a></li>
+                <li><a href="#">Themes</a></li>
+                <li><a href="#" role="button">Install</a></li>
+            </ul>
+        </nav>
+
+        <header class="hero-section">
+            <h1 class="font-bold">Minimal Design, <br>Maximum Impact</h1>
+            <p>Elegant styles for all native HTML elements without any classes. Pico.css is a minimalist CSS Framework that uses semantic HTML tags as selectors.</p>
+        </header>
+
+        <section id="components">
+            <div class="grid">
+                <!-- Form Elements -->
+                <article>
+                    <header><strong>Semantic Forms</strong></header>
+                    <form>
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" placeholder="John Doe">
+                        
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com">
+                        
+                        <label for="range">Performance Level
+                            <input type="range" min="0" max="100" value="75" id="range" name="range">
+                        </label>
+                        
+                        <button type="submit">Get Started</button>
+                    </form>
+                </article>
+
+                <!-- Typography -->
+                <article>
+                    <header><strong>Typography</strong></header>
+                    <h2>This is an H2</h2>
+                    <p>A simple paragraph to show how <u>underlines</u>, <strong>bold</strong>, and <em>italic</em> text looks in Pico.</p>
+                    <blockquote>
+                        "Simplicity is the ultimate sophistication."
+                        <footer><cite>- Leonardo da Vinci</cite></footer>
+                    </blockquote>
+                    <details>
+                        <summary>View technical details</summary>
+                        <p>Pico uses standard CSS variables and system fonts to keep things lightweight.</p>
+                    </details>
+                </article>
+            </div>
+        </section>
+
+        <!-- Grid Demo -->
+        <section class="grid-demo">
+            <h3>Responsive Grid</h3>
+            <div class="grid">
+                <article>1</article>
+                <article>2</article>
+                <article>3</article>
+                <article>4</article>
+            </div>
+        </section>
+
+        <!-- Modals -->
+        <section>
+            <button class="contrast" onclick="document.getElementById('modal-demo').showModal()">Open Modal</button>
+            
+            <dialog id="modal-demo">
+                <article>
+                    <header>
+                        <a href="#close" aria-label="Close" class="close" onclick="document.getElementById('modal-demo').close()"></a>
+                        Confirm Action
+                    </header>
+                    <p>
+                        Are you sure you want to proceed with this minimalist approach? It's highly addictive.
+                    </p>
+                    <footer>
+                        <a href="#cancel" role="button" class="secondary" onclick="document.getElementById('modal-demo').close()">Cancel</a>
+                        <a href="#confirm" role="button" onclick="document.getElementById('modal-demo').close()">Confirm</a>
+                    </footer>
+                </article>
+            </dialog>
+        </section>
+
+        <footer class="text-center">
+            <small>Built with <a href="https://picocss.com">Pico.css</a> • No classes required</small>
+        </footer>
+
+    </main>
+</body>
+</html>

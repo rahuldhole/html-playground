@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Frame VR World</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/aframe.svg">
+    <style>
+        .ui-overlay {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        .ui-overlay * { pointer-events: auto; }
+    </style>
+</head>
+<body>
+    <div class="ui-overlay space-y-4">
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/50 max-w-sm">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-pink-500 text-white rounded-xl shadow-lg shadow-pink-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
+                </div>
+                <h1 class="text-xl font-black text-slate-900 tracking-tight">A-Frame VR</h1>
+            </div>
+            <p class="text-slate-600 text-sm mb-6 leading-relaxed">Experience Virtual Reality in your browser. Use <kbd class="px-2 py-1 bg-slate-100 rounded border border-slate-200">WASD</kbd> to move and <kbd class="px-2 py-1 bg-slate-100 rounded border border-slate-200">Mouse</kbd> to look around.</p>
+            <div class="space-y-2">
+                <button onclick="changeColor('pink')" class="w-full py-2 bg-pink-500 text-white rounded-xl font-bold hover:bg-pink-600 transition shadow-lg shadow-pink-100">Animate Sphere</button>
+            </div>
+        </div>
+    </div>
+
+    <a-scene embedded shadow="type: pcfsoft">
+        <!-- Assets -->
+        <a-assets>
+            <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+            <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg">
+        </a-assets>
+
+        <!-- Primitive Objects -->
+        <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9" shadow
+               animation="property: rotation; to: 0 405 0; loop: true; dur: 10000; easing: linear">
+        </a-box>
+        
+        <a-sphere id="main-sphere" position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow
+                  animation="property: position; to: 0 1.5 -5; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+        </a-sphere>
+        
+        <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D" shadow></a-cylinder>
+        
+        <a-plane position="0 0 -4" rotation="-90 0 0" width="10" height="10" color="#7BC8A4" shadow></a-plane>
+
+        <!-- Background / Environment -->
+        <a-sky src="#skyTexture" rotation="0 -90 0"></a-sky>
+        
+        <!-- Lights -->
+        <a-entity light="type: ambient; color: #BBB"></a-entity>
+        <a-entity light="type: directional; color: #FFF; intensity: 0.6; castShadow: true" position="-0.5 1 1"></a-entity>
+
+        <!-- Camera -->
+        <a-entity position="0 1.6 0">
+            <a-camera></a-camera>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        function changeColor(color) {
+            const sphere = document.querySelector('#main-sphere');
+            const colors = ['#EF2D5E', '#4CC3D9', '#FFC65D', '#7BC8A4', '#9B59B6'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            sphere.setAttribute('color', randomColor);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Interactive Map Showcase</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/leaflet.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        #map { height: 500px; z-index: 1; }
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: #1e293b;
+            color: white;
+            border-radius: 12px;
+            padding: 4px;
+        }
+        .custom-popup .leaflet-popup-tip { background: #1e293b; }
+    </style>
+</head>
+<body class="bg-slate-50 p-4 md:p-8">
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    Live Map
+                </div>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Leaflet Explorer</h1>
+                <p class="text-slate-500 max-w-lg">Advanced interactive map features including custom markers, dynamic popups, and coordinate tracking.</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="zoomTo('London')" class="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition font-medium text-sm">London</button>
+                <button onclick="zoomTo('Tokyo')" class="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition font-medium text-sm">Tokyo</button>
+                <button onclick="zoomTo('New York')" class="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition font-medium text-sm">New York</button>
+            </div>
+        </header>
+
+        <div class="relative group">
+            <div id="map" class="rounded-3xl shadow-2xl shadow-slate-200 border-8 border-white overflow-hidden"></div>
+            <div class="absolute bottom-6 right-6 z-[1000] bg-white/90 backdrop-blur px-4 py-2 rounded-2xl shadow-lg border border-white/50 flex items-center gap-3">
+                <div class="p-2 bg-slate-100 rounded-lg">
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Current View</p>
+                    <p id="coords" class="text-sm font-mono font-bold text-slate-700">0.0000, 0.0000</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-800">Layers</h3>
+                <p class="text-sm text-slate-500">Easily switch between satellite, terrain, and street views using TileLayers.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-800">Interactivity</h3>
+                <p class="text-sm text-slate-500">Handle clicks, drags, and zoom events with a simple, robust API.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-800">Markers</h3>
+                <p class="text-sm text-slate-500">Add custom icons, popups, and tooltips to any location on the map.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const locations = {
+            'London': [51.505, -0.09],
+            'Tokyo': [35.6762, 139.6503],
+            'New York': [40.7128, -74.0060]
+        };
+
+        const map = L.map('map').setView(locations['London'], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Custom marker
+        const marker = L.marker(locations['London']).addTo(map);
+        marker.bindPopup(`
+            <div class="p-2">
+                <h4 class="font-bold text-lg mb-1">Hello from London!</h4>
+                <p class="text-sm opacity-80">This is a custom Leaflet popup with Tailwind styling inside.</p>
+            </div>
+        `, { className: 'custom-popup' }).openPopup();
+
+        // Circle overlay
+        L.circle(locations['London'], {
+            color: '#3b82f6',
+            fillColor: '#3b82f6',
+            fillOpacity: 0.1,
+            radius: 500
+        }).addTo(map);
+
+        function zoomTo(city) {
+            const coords = locations[city];
+            map.flyTo(coords, 13, { duration: 1.5 });
+            L.marker(coords).addTo(map).bindPopup(`Welcome to ${city}!`).openPopup();
+        }
+
+        map.on('move', () => {
+            const center = map.getCenter();
+            document.getElementById('coords').innerText = 
+                `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+        });
+    </script>
+</body>
+</html>

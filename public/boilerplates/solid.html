@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolidJS Reactive Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/solid.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .solid-bg { background: linear-gradient(135deg, #2c4f7c 0%, #1c3350 100%); }
+    </style>
+</head>
+<body class="bg-[#f0f4f8] text-slate-900 min-h-screen">
+    <div id="root"></div>
+
+    <!-- SolidJS from ESM -->
+    <script type="module">
+        import { createSignal, onMount } from 'https://esm.sh/solid-js';
+        import { render } from 'https://esm.sh/solid-js/web';
+        import html from 'https://esm.sh/solid-js/html';
+
+        function App() {
+            const [count, setCount] = createSignal(0);
+            const [time, setTime] = createSignal(new Date().toLocaleTimeString());
+
+            onMount(() => {
+                const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
+                return () => clearInterval(timer);
+            });
+
+            return html`
+                <div class="min-h-screen p-6 md:p-12">
+                    <div class="max-w-5xl mx-auto space-y-12">
+                        
+                        <header class="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-slate-200 pb-12">
+                            <div class="flex items-center gap-6">
+                                <div class="w-16 h-16 solid-bg rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-900/20">
+                                    <svg class="w-10 h-10 text-[#446b9f]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12l-12 12L0 12 12 0l12 12z"/></svg>
+                                </div>
+                                <div class="space-y-1">
+                                    <h1 class="text-4xl font-extrabold tracking-tight">SolidJS</h1>
+                                    <p class="text-slate-500 font-medium">Fine-grained reactivity without Virtual DOM</p>
+                                </div>
+                            </div>
+                            <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                <span class="text-sm font-bold font-mono text-slate-600">${time()}</span>
+                            </div>
+                        </header>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Signal Demo -->
+                            <section class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                                <div class="space-y-4">
+                                    <h2 class="text-2xl font-bold">Signals</h2>
+                                    <p class="text-slate-500 leading-relaxed">Solid's signals are the foundation of its reactivity. They are fine-grained and don't require component re-renders.</p>
+                                </div>
+                                <div class="p-8 bg-slate-50 rounded-[2rem] text-center space-y-4">
+                                    <h3 class="text-6xl font-black text-blue-900 tracking-tighter">${count()}</h3>
+                                    <div class="flex gap-2 justify-center">
+                                        <button onClick=${() => setCount(c => c - 1)} class="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 font-bold hover:bg-slate-50 transition">-</button>
+                                        <button onClick=${() => setCount(c => c + 1)} class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition">Increment</button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Performance Info -->
+                            <section class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                                <h2 class="text-2xl font-bold">Performance First</h2>
+                                <div class="space-y-6">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-2 bg-green-100 text-green-600 rounded-lg">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold">No Virtual DOM</h4>
+                                            <p class="text-sm text-slate-500">Solid compiles your templates to real DOM nodes and updates them directly.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold">Fine-grained</h4>
+                                            <p class="text-sm text-slate-500">Only the specific DOM elements that depend on a signal will update when it changes.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="bg-slate-900 p-12 rounded-[3.5rem] text-white overflow-hidden relative shadow-2xl">
+                            <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] -translate-x-1/4 translate-y-1/4"></div>
+                            <div class="relative z-10 space-y-6 max-w-2xl">
+                                <h3 class="text-3xl font-bold leading-tight">Ready to build the fastest <br>web apps on earth?</h3>
+                                <div class="bg-black/30 p-6 rounded-2xl font-mono text-sm text-blue-400">
+                                    import { createSignal } from 'solid-js';<br><br>
+                                    const [count, setCount] = createSignal(0);
+                                </div>
+                            </div>
+                        </div>
+
+                        <footer class="text-center pb-12">
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Built with SolidJS & Tailwind</p>
+                        </footer>
+
+                    </div>
+                </div>
+            `;
+        }
+
+        render(App, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plotly.js Scientific Charts Showcase</title>
+    <!-- Plotly.js CDN -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/plotly.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .chart-container { min-height: 450px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-6 md:p-12">
+    
+    <div class="max-w-6xl mx-auto space-y-12">
+        
+        <header class="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-white/10 pb-12">
+            <div class="space-y-4 text-center md:text-left">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-900/40">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span class="text-sm font-bold tracking-tight">Plotly Visualization</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Scientific Charting</h1>
+                <p class="text-slate-400 text-lg max-w-xl leading-relaxed">High-level, declarative charting library for complex data analysis, 3D plotting, and statistical visualizations.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="updateData()" class="px-6 py-3 bg-white text-slate-900 rounded-2xl font-bold hover:bg-indigo-400 hover:text-white transition-all shadow-xl">Randomize Data</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Surface Plot -->
+            <div class="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">3D Surface Analysis</h2>
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em] bg-indigo-400/10 px-3 py-1 rounded-full">Interactive</span>
+                </div>
+                <div id="surfacePlot" class="chart-container w-full rounded-2xl overflow-hidden"></div>
+            </div>
+
+            <!-- Bubble Chart -->
+            <div class="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">Statistical Distribution</h2>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-[0.2em] bg-emerald-400/10 px-3 py-1 rounded-full">Bubble</span>
+                </div>
+                <div id="bubbleChart" class="chart-container w-full rounded-2xl overflow-hidden"></div>
+            </div>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="bg-white/5 p-8 md:p-12 rounded-[3rem] border border-white/10 space-y-8">
+            <h2 class="text-xl font-bold">Correlation Heatmap</h2>
+            <div id="heatmap" class="w-full min-h-[400px] rounded-2xl overflow-hidden"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const darkLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#94a3b8', family: 'Space Grotesk' },
+            margin: { l: 40, r: 40, t: 40, b: 40 },
+            xaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.1)' },
+            yaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.1)' }
+        };
+
+        // 3D Surface Plot
+        function renderSurface() {
+            const zData = [];
+            for(let i=0; i<20; i++) {
+                zData.push(Array.from({length: 20}, () => Math.random() * 10));
+            }
+            const data = [{
+                z: zData,
+                type: 'surface',
+                colorscale: 'Viridis',
+                showscale: false
+            }];
+            Plotly.newPlot('surfacePlot', data, {
+                ...darkLayout,
+                scene: {
+                    xaxis: {backgroundcolor: 'rgba(0,0,0,0)', gridcolor: 'rgba(255,255,255,0.1)'},
+                    yaxis: {backgroundcolor: 'rgba(0,0,0,0)', gridcolor: 'rgba(255,255,255,0.1)'},
+                    zaxis: {backgroundcolor: 'rgba(0,0,0,0)', gridcolor: 'rgba(255,255,255,0.1)'}
+                }
+            });
+        }
+
+        // Bubble Chart
+        function renderBubble() {
+            const data = [{
+                x: [1, 2, 3, 4, 5],
+                y: [10, 11, 12, 13, 14],
+                mode: 'markers',
+                marker: {
+                    size: [40, 60, 80, 100, 120],
+                    color: ['#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#f97316'],
+                    opacity: 0.6
+                }
+            }];
+            Plotly.newPlot('bubbleChart', data, darkLayout);
+        }
+
+        // Heatmap
+        function renderHeatmap() {
+            const data = [{
+                z: [[1, 20, 30], [20, 1, 60], [30, 60, 1]],
+                type: 'heatmap',
+                colorscale: 'Portland',
+                showscale: false
+            }];
+            Plotly.newPlot('heatmap', data, darkLayout);
+        }
+
+        function updateData() {
+            renderSurface();
+            renderBubble();
+            renderHeatmap();
+        }
+
+        updateData();
+
+        window.addEventListener('resize', () => {
+            Plotly.Plots.resize('surfacePlot');
+            Plotly.Plots.resize('bubbleChart');
+            Plotly.Plots.resize('heatmap');
+        });
+    </script>
+</body>
+</html>

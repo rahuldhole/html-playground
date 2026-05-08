@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vega & Vega-Lite Visualization Grammar</title>
+    <!-- Vega Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.15.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.2"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/vega.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Public Sans', sans-serif; }
+        .vega-embed.actions-hidden summary { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-6 md:p-12">
+    
+    <div class="max-w-6xl mx-auto space-y-16">
+        
+        <header class="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-slate-200 pb-12">
+            <div class="space-y-4 text-center md:text-left">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-2xl shadow-xl">
+                    <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 19.74h20L12 2zm0 3.84l7.07 12.39H4.93L12 5.84z"/></svg>
+                    <span class="text-sm font-bold tracking-tight">Vega Grammar</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Data Visualization</h1>
+                <p class="text-slate-500 text-lg max-w-xl leading-relaxed">A declarative grammar for interactive graphics. Create complex, data-driven charts with just a JSON specification.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="changeTheme()" class="px-6 py-3 bg-white border border-slate-200 text-slate-900 rounded-2xl font-bold hover:bg-slate-50 transition-all shadow-sm">Toggle Theme</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Scatter Plot -->
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold italic underline decoration-orange-400 decoration-4">Interactive Scatter</h2>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">Vega-Lite</span>
+                </div>
+                <div id="vis-scatter" class="w-full h-[400px] flex items-center justify-center bg-slate-50/50 rounded-3xl p-4"></div>
+                <p class="text-xs text-slate-400 text-center">Drag to select points and see the magic of declarative selection.</p>
+            </div>
+
+            <!-- Bar Chart -->
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold italic underline decoration-blue-400 decoration-4">Performance Metrics</h2>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">Bar Chart</span>
+                </div>
+                <div id="vis-bar" class="w-full h-[400px] flex items-center justify-center bg-slate-50/50 rounded-3xl p-4"></div>
+                <p class="text-xs text-slate-400 text-center">Simple bar chart showing categorical data distribution.</p>
+            </div>
+        </div>
+
+        <!-- Documentation Card -->
+        <section class="bg-slate-900 text-white p-12 md:p-24 rounded-[4rem] space-y-12 overflow-hidden relative shadow-2xl">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+            
+            <div class="max-w-2xl space-y-6 relative z-10">
+                <h2 class="text-5xl font-black tracking-tight leading-tight">Declarative <br>Charts.</h2>
+                <p class="text-xl text-slate-400 leading-relaxed">Vega-Lite provides a higher-level grammar to quickly describe interactive visualizations by mapping data to visual properties.</p>
+            </div>
+            
+            <div class="bg-black/40 p-8 rounded-3xl font-mono text-sm text-slate-300 relative z-10 border border-white/5">
+                vegaEmbed('#vis', {<br>
+                &nbsp;&nbsp;mark: "bar",<br>
+                &nbsp;&nbsp;encoding: {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;x: {field: "a", type: "nominal"},<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;y: {field: "b", type: "quantitative"}<br>
+                &nbsp;&nbsp;}<br>
+                });
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Scatter Plot Specification
+        const scatterSpec = {
+            $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+            description: 'A scatterplot with selection',
+            data: {
+                values: [
+                    {x: 1, y: 2, c: 'A'}, {x: 2, y: 1, c: 'A'}, {x: 3, y: 4, c: 'A'},
+                    {x: 4, y: 8, c: 'B'}, {x: 5, y: 6, c: 'B'}, {x: 6, y: 9, c: 'B'},
+                    {x: 7, y: 3, c: 'C'}, {x: 8, y: 5, c: 'C'}, {x: 9, y: 2, c: 'C'}
+                ]
+            },
+            params: [{
+                name: 'brush',
+                select: 'interval'
+            }],
+            mark: {type: 'point', size: 100, filled: true},
+            encoding: {
+                x: {field: 'x', type: 'quantitative', scale: {zero: false}},
+                y: {field: 'y', type: 'quantitative', scale: {zero: false}},
+                color: {
+                    condition: {param: 'brush', field: 'c', type: 'nominal'},
+                    value: 'grey'
+                }
+            },
+            width: 'container',
+            height: 300,
+            config: {
+                background: 'transparent',
+                view: {stroke: 'transparent'}
+            }
+        };
+
+        // Bar Chart Specification
+        const barSpec = {
+            $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+            data: {
+                values: [
+                    {a: 'A', b: 28}, {a: 'B', b: 55}, {a: 'C', b: 43},
+                    {a: 'D', b: 91}, {a: 'E', b: 81}, {a: 'F', b: 53}
+                ]
+            },
+            mark: {type: 'bar', cornerRadiusEnd: 10, color: '#3b82f6'},
+            encoding: {
+                x: {field: 'a', type: 'nominal', axis: {labelAngle: 0, title: null}},
+                y: {field: 'b', type: 'quantitative', axis: {title: null}}
+            },
+            width: 'container',
+            height: 300,
+            config: {
+                background: 'transparent',
+                view: {stroke: 'transparent'}
+            }
+        };
+
+        vegaEmbed('#vis-scatter', scatterSpec, {actions: false});
+        vegaEmbed('#vis-bar', barSpec, {actions: false});
+
+        function changeTheme() {
+            // Placeholder for theme toggle logic
+            alert('Theme toggle coming soon!');
+        }
+    </script>
+</body>
+</html>
