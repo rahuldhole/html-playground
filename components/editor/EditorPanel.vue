@@ -295,6 +295,8 @@ const handleAISubmit = async () => {
   if (isAILoading.value || !aiPrompt.value) return
   
   isAILoading.value = true
+  aiStatusText.value = 'Thinking...'
+  aiReasoning.value = ''
   abortController.value = new AbortController()
   
   try {
@@ -326,7 +328,6 @@ const handleAISubmit = async () => {
       configure({ accessToken: publicToken })
 
       aiStatusText.value = 'Initializing...'
-      aiReasoning.value = ''
 
       try {
         let accumulatedCode = ''
@@ -376,8 +377,8 @@ const handleAISubmit = async () => {
           aiStatusText.value = run.status || 'Thinking...'
 
           if (run.status === 'COMPLETED') {
-            // Wait for streams to finish processing
-            await Promise.all([streamPromise, reasoningStreamPromise])
+            // No need to wait for streams, the run output is the final source of truth
+            // and the streams will finish in the background anyway.
             
             const finalCode = (run.output as any)?.code
             if (finalCode) {
@@ -396,7 +397,6 @@ const handleAISubmit = async () => {
       } finally {
         isAILoading.value = false
         aiStatusText.value = 'Thinking...'
-        aiReasoning.value = ''
         abortController.value = null
       }
     } else {
@@ -408,7 +408,6 @@ const handleAISubmit = async () => {
       const decoder = new TextDecoder()
       
       aiStatusText.value = 'Generating...'
-      aiReasoning.value = ''
 
       try {
         let hasStarted = false
