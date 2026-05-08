@@ -30,11 +30,14 @@ export default defineEventHandler(async (event) => {
     const stream = await sdk.chat.send({
       appTitle: "Minimalist HTML IDE",
       chatRequest: {
-        model: "google/gemini-2.0-flash-001",
+        model: "openrouter/free",
         messages: messages,
         stream: true
       }
     })
+
+    let accumulated = ''
+    let sentIndex = 0
 
     // Create a ReadableStream that extracts only the content delta
     const responseStream = new ReadableStream({
@@ -43,8 +46,27 @@ export default defineEventHandler(async (event) => {
           for await (const chunk of stream) {
             const content = chunk.choices?.[0]?.delta?.content
             if (content) {
-              controller.enqueue(new TextEncoder().encode(content))
+              accumulated += content
+              
+              // Strip out markdown code block syntax globally
+              let tempCleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '')
+              
+              // Hold back 25 characters to prevent sending partial markdown blocks 
+              // that might be resolved differently as more chunks arrive.
+              const safeToSendLength = Math.max(0, tempCleaned.length - 25)
+              
+              if (safeToSendLength > sentIndex) {
+                const toSend = tempCleaned.slice(sentIndex, safeToSendLength)
+                controller.enqueue(new TextEncoder().encode(toSend))
+                sentIndex = safeToSendLength
+              }
             }
+          }
+          
+          // Stream finished, flush the remaining text
+          let finalCleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '')
+          if (finalCleaned.length > sentIndex) {
+            controller.enqueue(new TextEncoder().encode(finalCleaned.slice(sentIndex)))
           }
         } catch (e) {
           console.error("Stream processing error:", e)
