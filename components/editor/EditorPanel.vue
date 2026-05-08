@@ -351,80 +351,81 @@ const handleAISubmit = async () => {
       currentRunId.value = runId
       
       // Configure the SDK with the public token for this session
-      const { runs, streams, configure } = await import("@trigger.dev/sdk/v3")
-      configure({ accessToken: publicToken })
+      const { runs, streams, auth } = await import("@trigger.dev/sdk/v3")
 
       aiStatusText.value = 'Initializing...'
 
       try {
         let accumulatedCode = ''
         
-        // Start reading the reasoning stream
-        const reasoningStreamPromise = (async () => {
-          try {
-            console.log('Starting reasoning stream for:', runId)
-            const stream = await streams.read(runId, "ai-reasoning")
-            for await (const chunk of stream) {
-              if (signal.aborted) {
-                console.log('Reasoning stream aborted')
-                break
+        await auth.withAuth({ accessToken: publicToken }, async () => {
+          // Start reading the reasoning stream
+          const reasoningStreamPromise = (async () => {
+            try {
+              console.log('Starting reasoning stream for:', runId)
+              const stream = await streams.read(runId, "ai-reasoning")
+              for await (const chunk of stream) {
+                if (signal.aborted) {
+                  console.log('Reasoning stream aborted')
+                  break
+                }
+                aiReasoning.value += chunk
               }
-              aiReasoning.value += chunk
+            } catch (err) {
+              console.error("Error reading reasoning stream:", err)
             }
-          } catch (err) {
-            console.error("Error reading reasoning stream:", err)
-          }
-        })()
+          })()
 
-        // Start reading the code stream in parallel to the run subscription
-        const streamPromise = (async () => {
-          try {
-            console.log('Starting output stream for:', runId)
-            const stream = await streams.read(runId, "ai-output")
-            let hasStarted = false
-            for await (const chunk of stream) {
-              if (signal.aborted) {
-                console.log('Output stream aborted')
-                break
+          // Start reading the code stream in parallel to the run subscription
+          const streamPromise = (async () => {
+            try {
+              console.log('Starting output stream for:', runId)
+              const stream = await streams.read(runId, "ai-output")
+              let hasStarted = false
+              for await (const chunk of stream) {
+                if (signal.aborted) {
+                  console.log('Output stream aborted')
+                  break
+                }
+                
+                if (!hasStarted) {
+                  hasStarted = true
+                  showAIPopup.value = false
+                  aiPrompt.value = ''
+                }
+                accumulatedCode += chunk
+                
+                let displayCode = accumulatedCode
+                // Clean up markdown blocks if they appear in the stream
+                if (displayCode.includes('```')) {
+                  displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+                }
+                editorStore.setHtmlCode(displayCode)
               }
-              
-              if (!hasStarted) {
-                hasStarted = true
-                showAIPopup.value = false
-                aiPrompt.value = ''
-              }
-              accumulatedCode += chunk
-              
-              let displayCode = accumulatedCode
-              // Clean up markdown blocks if they appear in the stream
-              if (displayCode.includes('```')) {
-                displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
-              }
-              editorStore.setHtmlCode(displayCode)
+            } catch (err) {
+              console.error("Error reading output stream:", err)
             }
-          } catch (err) {
-            console.error("Error reading output stream:", err)
-          }
-        })()
+          })()
 
-        // This is an Async Iterator that yields updates via WebSockets
-        for await (const run of runs.subscribeToRun(runId)) {
-          console.log('Run status update:', run.status)
-          aiStatusText.value = run.status || 'Thinking...'
+          // This is an Async Iterator that yields updates via WebSockets
+          for await (const run of runs.subscribeToRun(runId)) {
+            console.log('Run status update:', run.status)
+            aiStatusText.value = run.status || 'Thinking...'
 
-          if (run.status === 'COMPLETED') {
-            console.log('Run completed:', runId)
-            const finalCode = (run.output as any)?.code
-            if (finalCode) {
-              editorStore.setHtmlCode(finalCode)
+            if (run.status === 'COMPLETED') {
+              console.log('Run completed:', runId)
+              const finalCode = (run.output as any)?.code
+              if (finalCode) {
+                editorStore.setHtmlCode(finalCode)
+              }
+              break 
+            } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
+              throw new Error(`Task failed with status: ${run.status}`)
             }
-            break 
-          } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
-            throw new Error(`Task failed with status: ${run.status}`)
+            
+            if (signal.aborted) break
           }
-          
-          if (signal.aborted) break
-        }
+        });
       } catch (err: any) {
         alert(`AI Error: ${err.message}`)
       } finally {
