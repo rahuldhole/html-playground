@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     },
   },
 
-  compatibilityDate: "2024-11-01",
+  compatibilityDate: "2025-01-26",
 
   css: ['~/assets/css/main.css'],
   devtools: { enabled: true },
@@ -40,9 +40,18 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'cloudflare_pages',
-    cloudflare: {
-      nodeCompat: true
+    unenv: {
+      inject: {
+        process: false
+      }
     },
+    alias: {
+      'unenv/node/internal/process/process': './server/utils/process-fixed.mjs'
+    },
+    replace: {
+      'process.stdout': 'undefined',
+      'process.stderr': 'undefined',
+    }
   },
 
   routeRules: {
