@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
           "X-Title": "Minimalist HTML IDE"
         },
         body: {
-          "model": "google/gemma-4-26b-a4b-it",
+          "model": "openrouter/free",
           "messages": messages
         }
       })
