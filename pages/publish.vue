@@ -17,7 +17,7 @@ const route = useRoute()
 const editorStore = useEditorStore()
 const code = ref<string | null>(null)
 const run = ref<boolean>(false)
-const showButtons = ref<boolean>(false)
+const showButtons = ref<boolean>(true)
 
 const blobUrl = computed(() => {
   if (!process.client) return ''
@@ -79,20 +79,22 @@ const handleIframeError = () => {
         <div v-if="iframeError" class="text-red-600 text-center mt-4">
           An error occurred while loading the content.
         </div>
-        <div v-if="showButtons" class="fixed bottom-6 right-6 z-50 bg-white p-4 rounded-lg shadow-lg flex flex-col items-center space-y-4 w-48">
-          <button @click="closeCard" class="absolute top-0 right-0 w-8 h-8 bg-red-600 hover:bg-red-700 rounded-full shadow-md flex items-center justify-center">
-            <Icon name="carbon:close" class="text-white w-4 h-4" />
-          </button>
-          
-          <button @click="openInNewTab(blobUrl)" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center justify-center space-x-2 shadow-md">
-            <Icon name="carbon:view" class="w-4 h-4" />
-            <span>View</span>
+        <div v-if="showButtons" class="fixed bottom-8 right-8 z-[99999] flex items-center gap-1.5 p-1.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-full shadow-2xl border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 hover:shadow-indigo-500/10 ring-1 ring-black/5 dark:ring-white/10">
+          <button @click="openInNewTab(blobUrl)" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full transition-colors group">
+            <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            <span>Run in sandbox</span>
           </button>
 
-          <NuxtLink :to="`/editor${route.hash}`" class="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center justify-center space-x-2 shadow-md">
-            <Icon name="carbon:edit" class="w-4 h-4" />
-            <span>Edit</span>
+          <div class="w-px h-5 bg-gray-200 dark:bg-gray-700"></div>
+
+          <NuxtLink :to="`/editor${route.hash}`" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-colors shadow-sm shadow-indigo-600/20 group">
+            <Icon name="heroicons:code-bracket" class="w-4 h-4 transition-transform group-hover:scale-110" />
+            <span>Edit Code</span>
           </NuxtLink>
+
+          <button @click="closeCard" class="flex items-center justify-center w-8 h-8 ml-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title="Hide">
+            <Icon name="heroicons:x-mark" class="w-4 h-4" />
+          </button>
         </div>
       </div>
     </ClientOnly>
