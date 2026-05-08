@@ -6,6 +6,11 @@
 .cache
 dist
 
+.trigger
+.trigger.dev
+.trigger.deploy
+.trigger.init
+
 .vscode
 
 # Node dependencies

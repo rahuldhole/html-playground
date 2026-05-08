@@ -1,7 +1,7 @@
 import { defineConfig } from "@trigger.dev/sdk/v3";
 
 export default defineConfig({
-  project: "html-playground",
+  project: "proj_ikfuwkocabpdhmpqipcx",
   runtime: "node",
   logLevel: "log",
   retries: {
