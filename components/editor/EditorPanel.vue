@@ -233,13 +233,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useMagicKeys, useFullscreen, useClipboard, useWindowSize } from '@vueuse/core'
-import { undo, redo } from '@codemirror/commands'
+import { undo, redo, history } from '@codemirror/commands'
 import { useColorMode } from '#imports'
 import { basicSetup } from 'codemirror'
 import { EditorView } from '@codemirror/view'
 import { html } from '@codemirror/lang-html'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { EditorState } from '@codemirror/state'
+import { EditorState, Transaction } from '@codemirror/state'
 import BoilerplateMenu from './BoilerplateMenu.vue'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'
@@ -344,12 +344,14 @@ const copyIcon = computed(() => isCopied.value ? 'heroicons:check' : 'heroicons:
 
 const handleUndo = () => {
   if (editorView.value) {
+    editorView.value.focus()
     undo(editorView.value as any)
   }
 }
 
 const handleRedo = () => {
   if (editorView.value) {
+    editorView.value.focus()
     redo(editorView.value as any)
   }
 }
@@ -569,7 +571,8 @@ watch(() => editorStore.htmlCode, (newValue) => {
         from: 0,
         to: editorView.value.state.doc.length,
         insert: newValue
-      }
+      },
+      annotations: Transaction.userEvent.of('input')
     });
   }
 });
