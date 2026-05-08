@@ -1,5 +1,5 @@
+import { tasks, auth } from "@trigger.dev/sdk/v3"
 import { OpenRouter } from '@openrouter/sdk'
-import { tasks } from "@trigger.dev/sdk/v3"
 import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
@@ -22,8 +22,18 @@ export default defineEventHandler(async (event) => {
         apiKey: config.openRouterKey
       })
 
+      // Generate a temporary public token so the frontend can subscribe to this run via WebSockets
+      const publicToken = await auth.createPublicToken({
+        scopes: {
+          read: {
+            runs: [handle.id]
+          }
+        }
+      })
+
       return {
-        runId: handle.id
+        runId: handle.id,
+        publicToken: publicToken
       }
     } catch (error: any) {
       console.error('Trigger.dev Error:', error.message)

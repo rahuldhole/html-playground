@@ -299,48 +299,40 @@ const handleAISubmit = async () => {
     
     // Check if it's a Trigger.dev runId response (JSON) or a Stream (Text)
     if (contentType.includes("application/json")) {
-      const { runId } = await response.json()
+      const { runId, publicToken } = await response.json()
       
-      // Clear prompt and close popup but keep loading state
+      // Configure the SDK with the public token for this session
+      const { runs, configure } = await import("@trigger.dev/sdk/v3")
+      configure({ accessToken: publicToken })
+
       showAIPopup.value = false
       aiPrompt.value = ''
       aiStatusText.value = 'Initializing...'
 
-      // Poll for the result
-      let finished = false
-      let attempts = 0
-      const maxAttempts = 60 // 2 minutes with 2s interval
+      try {
+        // This is an Async Iterator that yields updates via WebSockets
+        for await (const run of runs.subscribeToRun(runId)) {
+          aiStatusText.value = run.status || 'Thinking...'
 
-      while (!finished && attempts < maxAttempts) {
-        if (abortController.value?.signal.aborted) break
-
-        const statusResponse = await fetch(`/api/ai-status?runId=${runId}`, {
-          signal: abortController.value?.signal
-        })
-
-        if (!statusResponse.ok) {
-          throw new Error('Failed to check task status')
-        }
-
-        const statusData = await statusResponse.json()
-        aiStatusText.value = statusData.status || 'Thinking...'
-
-        if (statusData.status === 'COMPLETED') {
-          const finalCode = statusData.output?.code
-          if (finalCode) {
-            editorStore.setHtmlCode(finalCode)
+          if (run.status === 'COMPLETED') {
+            const finalCode = (run.output as any)?.code
+            if (finalCode) {
+              editorStore.setHtmlCode(finalCode)
+            }
+            break // Stop listening once finished
+          } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
+            throw new Error(`Task failed with status: ${run.status}`)
           }
-          finished = true
-        } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(statusData.status)) {
-          throw new Error(statusData.error || `Task failed with status: ${statusData.status}`)
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          attempts++
+          
+          // Check if user cancelled via the abort controller
+          if (abortController.value?.signal.aborted) break
         }
-      }
-
-      if (!finished && attempts >= maxAttempts) {
-        throw new Error('Generation timed out. Please check if your Trigger.dev worker is running.')
+      } catch (err: any) {
+        alert(`AI Error: ${err.message}`)
+      } finally {
+        isAILoading.value = false
+        aiStatusText.value = 'Thinking...'
+        abortController.value = null
       }
     } else {
       // Direct Stream implementation
