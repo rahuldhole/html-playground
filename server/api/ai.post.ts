@@ -1,10 +1,17 @@
-import { tasks, auth } from "@trigger.dev/sdk/v3"
+import { tasks, auth, configure } from "@trigger.dev/sdk/v3"
 import { OpenRouter } from '@openrouter/sdk'
 import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
   const { prompt, code } = await readBody(event)
   const config = useRuntimeConfig()
+
+  // Explicitly configure Trigger.dev with the secret key
+  if (config.triggerSecretKey) {
+    configure({
+      secretKey: config.triggerSecretKey,
+    })
+  }
 
   if (!config.openRouterKey || config.openRouterKey === '') {
     throw createError({
