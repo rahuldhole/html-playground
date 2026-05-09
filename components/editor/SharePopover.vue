@@ -32,11 +32,29 @@
 
     <!-- URL Display Stage -->
     <div v-else class="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div v-if="showQr" class="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 animate-in zoom-in-95 duration-200">
+        <div @click="openQrInNewTab" class="block group/qr cursor-zoom-in">
+          <img :src="qrCode" alt="QR Code" class="w-40 h-40 bg-white p-2 rounded-lg shadow-sm group-hover/qr:scale-105 transition-transform" />
+        </div>
+        <span class="text-[10px] font-medium text-gray-400">Click to expand</span>
+        <button @click="showQr = false" class="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase tracking-wider">Close QR</button>
+      </div>
+
       <div class="relative group">
+        <button 
+          v-if="canGenerateQr"
+          @click="handleShowQr"
+          class="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          :class="showQr ? 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'text-gray-400'"
+          title="Show QR Code"
+        >
+          <Icon name="heroicons:qr-code" class="w-4 h-4" />
+        </button>
         <input 
           readonly 
           :value="activeUrl"
-          class="w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-lg pl-3 pr-10 py-2.5 text-[11px] text-gray-600 dark:text-gray-300 focus:outline-none"
+          class="w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-lg pr-10 py-2.5 text-[11px] text-gray-600 dark:text-gray-300 focus:outline-none"
+          :class="canGenerateQr ? 'pl-10' : 'pl-3'"
         />
         <button 
           @click="handleCopy"
@@ -92,9 +110,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import { useEditor } from '~/composables/useEditor'
+import { useQr } from '~/composables/useQr'
 
 const props = defineProps<{
   modelValue: boolean
@@ -103,6 +122,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue'])
 
 const { generateShareUrl, shortenUrl } = useEditor()
+const { qrCode, generateQr } = useQr()
 const { copy } = useClipboard({ legacy: true })
 
 const activeUrl = ref('')
@@ -111,6 +131,11 @@ const isShortening = ref(false)
 const isCopied = ref(false)
 const isDev = ref(false)
 const shortenError = ref<string | null>(null)
+const showQr = ref(false)
+
+const canGenerateQr = computed(() => {
+  return activeUrl.value.length < 1817
+})
 
 const close = () => {
   emit('update:modelValue', false)
@@ -119,6 +144,13 @@ const close = () => {
 const handleSelect = async (type: 'editable' | 'publish') => {
   activeUrl.value = await generateShareUrl(type)
   isShortened.value = false
+  showQr.value = false
+}
+
+const handleShowQr = async () => {
+  if (!activeUrl.value) return
+  await generateQr(activeUrl.value)
+  showQr.value = !showQr.value
 }
 
 const handleCopy = async () => {
@@ -128,6 +160,28 @@ const handleCopy = async () => {
   setTimeout(() => {
     isCopied.value = false
   }, 2000)
+}
+
+const openQrInNewTab = () => {
+  if (!qrCode.value) return
+  const newWindow = window.open();
+  if (newWindow) {
+    newWindow.document.write(`
+      <html>
+        <head>
+          <title>QR Code</title>
+          <style>
+            body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f8fafc; font-family: sans-serif; }
+            img { max-width: 90vw; max-height: 90vh; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+          </style>
+        </head>
+        <body>
+          <img src="${qrCode.value}" alt="QR Code" />
+        </body>
+      </html>
+    `);
+    newWindow.document.close();
+  }
 }
 
 const handleShorten = async () => {
@@ -155,6 +209,7 @@ watch(() => props.modelValue, (isOpen) => {
     isShortened.value = false
     isShortening.value = false
     shortenError.value = null
+    showQr.value = false
   }
 })
 </script>
