@@ -298,6 +298,7 @@ const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
 const abortController = ref<AbortController | null>(null)
 const currentRunId = ref<string | null>(null)
+const userHasScrolledUp = ref(false)
 
 const handleCancelAI = async () => {
   if (abortController.value) {
@@ -333,6 +334,7 @@ const handleAISubmit = async () => {
   isAILoading.value = true
   aiStatusText.value = 'Thinking...'
   aiReasoning.value = ''
+  userHasScrolledUp.value = false
   
   const controller = new AbortController()
   abortController.value = controller
@@ -671,6 +673,24 @@ const setupEditor = () => {
         backgroundColor: isDarkMode.value ? "#282c34" : "#f6f8fa",
         color: isDarkMode.value ? "#495162" : "#6e7781",
         border: "none"
+      },
+      ".cm-scroller": {
+        scrollbarWidth: "thin",
+        scrollbarColor: isDarkMode.value ? "#4b5563 transparent" : "#cbd5e1 transparent"
+      },
+      ".cm-scroller::-webkit-scrollbar": {
+        width: "8px",
+        height: "8px",
+      },
+      ".cm-scroller::-webkit-scrollbar-track": {
+        background: "transparent",
+      },
+      ".cm-scroller::-webkit-scrollbar-thumb": {
+        background: isDarkMode.value ? "#4b5563" : "#cbd5e1",
+        borderRadius: "10px",
+      },
+      ".cm-scroller::-webkit-scrollbar-thumb:hover": {
+        background: isDarkMode.value ? "#6b7280" : "#94a3b8",
       }
     }),
     EditorView.updateListener.of(update => {
@@ -721,6 +741,20 @@ const setupEditor = () => {
   // Ensure scrolling works in fullscreen
   editorView.value.scrollDOM.style.height = "100%";
   editorView.value.scrollDOM.style.overflow = "auto";
+
+  // Add scroll listener to detect manual scroll
+  editorView.value.scrollDOM.addEventListener('scroll', () => {
+    if (!editorView.value) return;
+    const { scrollTop, scrollHeight, clientHeight } = editorView.value.scrollDOM;
+    // If the user is more than 100px away from the bottom, consider they've scrolled up
+    // We use a bit larger threshold to avoid accidental triggers
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    if (isAILoading.value && !isAtBottom) {
+      userHasScrolledUp.value = true;
+    } else if (isAtBottom) {
+      userHasScrolledUp.value = false;
+    }
+  });
 }
 
 // Boilerplate menu toggle
@@ -764,14 +798,34 @@ watch(() => editorStore.fullscreenSwitch, async (newVal, oldVal) => {
 // Update editor content when htmlCode in store changes
 watch(() => editorStore.htmlCode, (newValue) => {
   if (editorView.value && newValue !== editorView.value.state.doc.toString()) {
-    editorView.value.dispatch({
+    const view = editorView.value;
+    const currentScrollTop = view.scrollDOM.scrollTop;
+    
+    view.dispatch({
       changes: {
         from: 0,
-        to: editorView.value.state.doc.length,
+        to: view.state.doc.length,
         insert: newValue
       },
       userEvent: 'input'
     });
+
+    // Handle scrolling
+    if (isAILoading.value) {
+      if (!userHasScrolledUp.value) {
+        // Auto-scroll to bottom during AI streaming
+        nextTick(() => {
+          view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+        });
+      }
+    } else {
+      // Preserve scroll position for non-AI updates (like manual edits or boilerplate loads)
+      // Only if it's not a complete replacement that should reset scroll (like boilerplate)
+      // But wait, the dispatch might have already moved the scroll.
+      // If it's a manual edit, CodeMirror handles it.
+      // If it's an external update (this watch), we might want to keep the scroll.
+      view.scrollDOM.scrollTop = currentScrollTop;
+    }
   }
 });
 
