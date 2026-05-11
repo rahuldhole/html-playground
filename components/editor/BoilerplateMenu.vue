@@ -142,6 +142,12 @@ const templates = [
   { id: 19, name: 'CoffeeScript', category: 'Utilities', slug: 'coffeescript', description: 'CoffeeScript template', file: 'coffeescript.html', icon: 'https://cdn.simpleicons.org/coffeescript' },
   { id: 20, name: 'Underscore.js', category: 'Utilities', slug: 'underscore-js', description: 'Utility library', file: 'underscore-js.html', icon: 'https://underscorejs.org/favicon.ico' },
   { id: 16, name: 'Google Drive', category: 'Utilities', slug: 'google-drive', description: 'Drive API integration', file: 'google-drive.html', icon: 'https://cdn.simpleicons.org/googledrive' },
+  
+  // Mock APIs
+  { id: 41, name: 'DummyJSON', category: 'Mock APIs', slug: 'dummyjson', description: 'Product Catalog & Store', file: 'dummyjson.html', icon: 'https://dummyjson.com/favicon.ico' },
+  { id: 42, name: 'JSONPlaceholder', category: 'Mock APIs', slug: 'jsonplaceholder', description: 'Blog Posts & Comments', file: 'jsonplaceholder.html', icon: 'https://jsonplaceholder.typicode.com/favicon.ico' },
+  { id: 44, name: 'DiceBear', category: 'Mock APIs', slug: 'dicebear', description: 'Avatar Generator', file: 'dicebear.html', icon: 'https://www.dicebear.com/favicon.ico' },
+  { id: 45, name: 'RandomUser', category: 'Mock APIs', slug: 'randomuser', description: 'User Profile Directory', file: 'randomuser.html', icon: 'https://randomuser.me/favicon.ico' },
 ];
 
 // Search functionality
@@ -159,7 +165,7 @@ const filteredTemplatesByCategory = computed(() => {
   const grouped: Record<string, Template[]> = {};
   
   // Define category order
-  const categoryOrder = ['Core', 'Frameworks', 'Styling', 'Icons', 'Visualization', '3D & VR', 'Utilities'];
+  const categoryOrder = ['Core', 'Frameworks', 'Styling', 'Icons', 'Visualization', '3D & VR', 'Mock APIs', 'Utilities'];
   
   filtered.forEach(template => {
     const cat = template.category || 'Other';

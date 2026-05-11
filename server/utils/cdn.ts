@@ -159,6 +159,15 @@ export const CDNS = [
   { name: 'Mock Service Worker (MSW)', url: 'https://unpkg.com/msw@latest/lib/index.js', example: '<script src="https://unpkg.com/msw@latest/lib/index.js"></script>' },
   { name: 'JSON Server (In-Memory)', url: 'https://cdn.jsdelivr.net/npm/json-server@0.17.3', example: '<script src="https://cdn.jsdelivr.net/npm/json-server@0.17.3"></script>' },
 
+  // ============ MOCK APIS & PLACEHOLDERS ============
+  { name: 'DummyJSON', example: 'https://dummyjson.com/products', usecase: 'Comprehensive mock data for products, users, posts, and more' },
+  { name: 'JSONPlaceholder', example: 'https://jsonplaceholder.typicode.com/posts', usecase: 'Simple REST API for testing and prototyping' },
+  { name: 'RandomUser.me', example: 'https://randomuser.me/api/', usecase: 'Random user generator for user profiles and lists' },
+  { name: 'DiceBear (Avatars)', example: 'https://api.dicebear.com/7.x/pixel-art/svg', usecase: 'Generate unique SVG avatars from seeds' },
+  { name: 'Unsplash (Images)', example: 'https://images.unsplash.com/photo-1501854140801-50d01698950b', usecase: 'High-quality placeholder images via URL' },
+  { name: 'ReqRes', example: 'https://reqres.in/api/users', usecase: 'Test your frontend against a real API with auth support' },
+  { name: 'OpenWeatherMap (One Call)', example: 'https://api.openweathermap.org/data/2.5/weather?q=London', usecase: 'Weather data for apps (requires API key)' },
+
   // ============ UTILITIES ============
   { name: 'SimpleBar (Custom Scrollbars)', url: 'https://unpkg.com/simplebar@latest/dist/simplebar.min.js', example: '<link rel="stylesheet" href="https://unpkg.com/simplebar@latest/dist/simplebar.css"><script src="https://unpkg.com/simplebar@latest/dist/simplebar.min.js"></script>' },
   { name: 'FastClick (Mobile)', url: 'https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js', example: '<script src="https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js"></script>' },

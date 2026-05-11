@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONPlaceholder Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="bg-[#f8f9ff] text-slate-800 font-sans min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">JP</div>
+                <span class="font-bold tracking-tight text-lg">JSONPlaceholder Blog</span>
+            </div>
+            <div class="hidden md:flex gap-6 text-sm font-medium text-slate-500">
+                <a href="#" class="text-blue-600">Feed</a>
+                <a href="#" class="hover:text-slate-900 transition-colors">Users</a>
+                <a href="#" class="hover:text-slate-900 transition-colors">Albums</a>
+                <a href="#" class="hover:text-slate-900 transition-colors">Todos</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-6 py-12" x-data="blogApp()" x-init="init()">
+        <div class="mb-12">
+            <h2 class="text-3xl font-black text-slate-900 mb-2">Recent Posts</h2>
+            <p class="text-slate-500">Discover thoughts from our community of mock users.</p>
+        </div>
+
+        <!-- Skeleton Loader -->
+        <template x-if="loading">
+            <div class="space-y-8">
+                <template x-for="i in 3">
+                    <div class="animate-pulse bg-white p-8 rounded-3xl border border-slate-100">
+                        <div class="h-4 bg-slate-200 rounded w-1/4 mb-6"></div>
+                        <div class="h-8 bg-slate-200 rounded w-3/4 mb-4"></div>
+                        <div class="h-4 bg-slate-200 rounded w-full mb-2"></div>
+                        <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Posts List -->
+        <div class="space-y-8" x-cloak x-show="!loading">
+            <template x-for="post in posts" :key="post.id">
+                <article class="group bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer overflow-hidden relative" @click="selectedPost = post; fetchComments(post.id)">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-100 flex items-center justify-center text-[10px] font-bold text-blue-600 uppercase" x-text="'U'+post.userId"></div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">User ID: <span x-text="post.userId"></span></span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 group-hover:text-blue-600 transition-colors leading-tight" x-text="post.title"></h3>
+                    <p class="text-slate-500 leading-relaxed mb-6 line-clamp-3" x-text="post.body"></p>
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-sm">
+                        <span>Read comments</span>
+                        <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </div>
+                </article>
+            </template>
+        </div>
+
+        <!-- Modal for Comments -->
+        <div class="fixed inset-0 z-[60] flex items-center justify-center p-6" x-show="selectedPost" x-cloak x-transition>
+            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="selectedPost = null"></div>
+            <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl relative max-h-[80vh] flex flex-col overflow-hidden">
+                <div class="p-8 border-b sticky top-0 bg-white z-10 flex justify-between items-start">
+                    <div>
+                        <h4 class="font-black text-xl text-slate-900 mb-2 leading-tight" x-text="selectedPost?.title"></h4>
+                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Comments for post <span x-text="selectedPost?.id"></span></p>
+                    </div>
+                    <button @click="selectedPost = null" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l18 18"></path></svg>
+                    </button>
+                </div>
+                <div class="p-8 overflow-y-auto flex-1 space-y-6">
+                    <template x-if="commentsLoading">
+                        <div class="flex justify-center py-10">
+                            <div class="animate-spin w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full"></div>
+                        </div>
+                    </template>
+                    <template x-for="comment in comments" :key="comment.id">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="font-bold text-sm text-slate-800" x-text="comment.name"></span>
+                                <span class="text-[10px] text-slate-400" x-text="comment.email"></span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed" x-text="comment.body"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function blogApp() {
+            return {
+                posts: [],
+                loading: true,
+                selectedPost: null,
+                comments: [],
+                commentsLoading: false,
+
+                async init() {
+                    try {
+                        const res = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=10');
+                        this.posts = await res.json();
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async fetchComments(postId) {
+                    this.commentsLoading = true;
+                    this.comments = [];
+                    try {
+                        const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}/comments`);
+                        this.comments = await res.json();
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        this.commentsLoading = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

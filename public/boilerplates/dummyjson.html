@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DummyJSON Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        [v-cloak] { display: none; }
+        .product-card:hover { transform: translateY(-4px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900">
+    <div id="app" v-cloak class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">D</div>
+                    <h1 class="text-xl font-bold tracking-tight">DummyStore</h1>
+                </div>
+                <div class="flex-1 max-w-md mx-8 hidden sm:block">
+                    <input type="text" v-model="search" placeholder="Search products..." 
+                        class="w-full px-4 py-2 bg-gray-100 border-transparent rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+                <div class="flex items-center gap-4 text-gray-600">
+                    <span class="font-medium">{{ products.length }} Products</span>
+                    <div class="relative">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span class="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Sidebar -->
+                <aside class="w-full md:w-64 space-y-6">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Categories</h3>
+                        <div class="space-y-1">
+                            <button @click="currentCategory = ''" :class="{'bg-indigo-50 text-indigo-700': currentCategory === ''}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 font-medium transition-colors">All Categories</button>
+                            <button v-for="cat in categories" :key="cat" @click="currentCategory = cat" 
+                                :class="{'bg-indigo-50 text-indigo-700': currentCategory === cat}"
+                                class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 font-medium transition-colors capitalize">
+                                {{ cat.replace('-', ' ') }}
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Product Grid -->
+                <div class="flex-1">
+                    <div v-if="loading" class="flex justify-center py-20">
+                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
+                    </div>
+                    
+                    <div v-else-if="filteredProducts.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed">
+                        <p class="text-gray-500">No products found matching your criteria.</p>
+                        <button @click="search = ''; currentCategory = ''" class="mt-4 text-indigo-600 font-bold">Clear Filters</button>
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div v-for="p in filteredProducts" :key="p.id" class="product-card bg-white rounded-2xl shadow-sm border overflow-hidden">
+                            <div class="relative aspect-square bg-gray-100">
+                                <img :src="p.thumbnail" :alt="p.title" class="w-full h-full object-cover">
+                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-sm font-bold text-indigo-600 shadow-sm">
+                                    ${{ p.price }}
+                                </div>
+                                <div class="absolute top-3 left-3 bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" v-if="p.discountPercentage > 15">
+                                    -{{ Math.round(p.discountPercentage) }}%
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">{{ p.category.replace('-', ' ') }}</div>
+                                <h3 class="font-bold text-gray-900 line-clamp-1 mb-2">{{ p.title }}</h3>
+                                <p class="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">{{ p.description }}</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center text-yellow-400">
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                        <span class="ml-1 text-sm text-gray-600 font-medium">{{ p.rating }}</span>
+                                    </div>
+                                    <button class="bg-gray-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                                        Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, computed } = Vue;
+
+        createApp({
+            setup() {
+                const products = ref([]);
+                const categories = ref([]);
+                const loading = ref(true);
+                const search = ref('');
+                const currentCategory = ref('');
+
+                const fetchData = async () => {
+                    try {
+                        const [pRes, cRes] = await Promise.all([
+                            fetch('https://dummyjson.com/products?limit=100'),
+                            fetch('https://dummyjson.com/products/categories')
+                        ]);
+                        const pData = await pRes.json();
+                        const cData = await cRes.json();
+                        products.value = pData.products;
+                        categories.value = cData;
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const filteredProducts = computed(() => {
+                    return products.value.filter(p => {
+                        const matchesSearch = p.title.toLowerCase().includes(search.value.toLowerCase());
+                        const matchesCategory = !currentCategory.value || p.category === currentCategory.value;
+                        return matchesSearch && matchesCategory;
+                    });
+                });
+
+                onMounted(fetchData);
+
+                return {
+                    products,
+                    categories,
+                    loading,
+                    search,
+                    currentCategory,
+                    filteredProducts
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
