@@ -10,7 +10,8 @@ const { getCodeFromUrl } = useEditor()
 
 // Disable layout to avoid wrapping
 definePageMeta({
-  layout: false
+  layout: false,
+  colorMode: 'light'
 })
 
 const route = useRoute()
@@ -71,6 +72,9 @@ const handleIframeLoad = () => {
   body.style.margin = '0'
   body.style.padding = '0'
   
+  // Force light color scheme for the iframe content to avoid system dark mode interference
+  body.style.colorScheme = 'light'
+  
   iframeDocument.addEventListener('keydown', handleKeydown)
 }
 const handleIframeError = () => {
@@ -79,14 +83,14 @@ const handleIframeError = () => {
 </script>
 
 <template>
-  <div>
+  <div class="bg-white min-h-screen">
     <ClientOnly>
       <Welcome v-if="!code && !run" />
-      <div v-else>
+      <div v-else class="bg-white">
         <iframe
           ref="outputFrame"
           :src="blobUrl"
-          class="w-full h-screen border-none"
+          class="w-full h-screen border-none bg-white"
           sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
           @load="handleIframeLoad"
           @error="handleIframeError"
