@@ -1,7 +1,7 @@
 import { task, streams } from "@trigger.dev/sdk/v3";
 import { OpenRouter } from '@openrouter/sdk'
 
-import { SYSTEM_PROMPT } from "../shared/prompt";
+import { SYSTEM_PROMPT, TECHNICAL_CONSTRAINTS } from "../shared/prompt";
 
 export interface AIGenPayload {
   prompt: string;
@@ -27,7 +27,7 @@ export const aiGenerateTask = task({
       apiKey: apiKey,
     });
 
-    const systemPrompt = customSystemPrompt || SYSTEM_PROMPT;
+    const systemPrompt = (customSystemPrompt || SYSTEM_PROMPT) + "\n\n" + TECHNICAL_CONSTRAINTS;
 
     const messages = [
       {
