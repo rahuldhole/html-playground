@@ -21,6 +21,16 @@
             <button @click="updateOutput" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Reload Preview">
               <Icon name="heroicons:arrow-path" class="w-3 h-3" />
             </button>
+            <button @click="isConsoleOpen = !isConsoleOpen" 
+              class="p-1 rounded transition-colors flex items-center gap-1"
+              :class="[
+                isConsoleOpen ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
+                { 'text-red-500 hover:text-red-600': hasErrors && !isConsoleOpen }
+              ]" 
+              title="Toggle Console">
+              <Icon name="heroicons:command-line" class="w-3 h-3" />
+              <span v-if="hasErrors" class="flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -111,6 +121,60 @@
           <p class="text-gray-500 font-medium">Waiting for code...</p>
         </div>
       </div>
+
+      <!-- Console Drawer -->
+      <div v-if="isConsoleOpen" 
+        class="absolute bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#1e2028] border-t border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+        :style="{ height: isOutputFullscreen ? '40%' : '180px' }">
+        
+        <!-- Console Header -->
+        <div class="flex items-center justify-between px-3 py-1.5 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800/50">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Console</span>
+            <div v-if="hasErrors" class="flex items-center gap-1.5 px-2 py-0.5 bg-red-50 dark:bg-red-900/20 rounded-full">
+              <span class="flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
+              <span class="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase">Errors Detected</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button v-if="hasErrors" @click="triggerAIFix" 
+              class="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-[10px] font-bold transition-all shadow-sm">
+              <Icon name="heroicons:sparkles" class="w-3 h-3" />
+              AI Fix Errors
+            </button>
+            <button @click="clearConsole" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Clear Console">
+              <Icon name="heroicons:trash" class="w-3 h-3" />
+            </button>
+            <button @click="isConsoleOpen = false" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+              <Icon name="heroicons:x-mark" class="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+        
+        <!-- Console Body -->
+        <div class="flex-grow overflow-y-auto p-2 font-mono text-[11px] custom-scrollbar">
+          <div v-if="consoleLogs.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50 italic">
+            No logs yet
+          </div>
+          <div v-else v-for="log in consoleLogs" :key="log.id" 
+            class="py-1 border-b border-gray-50 dark:border-gray-800/30 last:border-0 flex gap-2">
+            <span class="shrink-0">
+              <Icon v-if="log.method === 'error'" name="heroicons:x-circle" class="w-3 h-3 text-red-500" />
+              <Icon v-else-if="log.method === 'warn'" name="heroicons:exclamation-triangle" class="w-3 h-3 text-amber-500" />
+              <Icon v-else name="heroicons:chevron-right" class="w-3 h-3 text-gray-400" />
+            </span>
+            <div class="flex-grow break-all whitespace-pre-wrap" :class="{
+              'text-red-500': log.method === 'error',
+              'text-amber-500': log.method === 'warn',
+              'text-gray-600 dark:text-gray-300': log.method === 'log',
+              'text-blue-500': log.method === 'info'
+            }">
+              {{ log.args.join(' ') }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -141,6 +205,39 @@ const isNarrow = computed(() => containerWidth.value < 400)
 const isMobile = isNarrow
 const showMobileMenu = ref(false)
 const showShareMenu = ref(false)
+
+// Console state
+const consoleLogs = ref<{method: string, args: any[], id: number}[]>([])
+const isConsoleOpen = ref(false)
+const hasErrors = computed(() => consoleLogs.value.some(log => log.method === 'error'))
+
+const clearConsole = () => {
+  consoleLogs.value = []
+}
+
+const triggerAIFix = () => {
+  const errors = consoleLogs.value
+    .filter(log => log.method === 'error')
+    .map(log => log.args.join(' '))
+    .join('\n')
+  editorStore.requestAIFix(errors)
+}
+
+const handleMessage = (event: MessageEvent) => {
+  if (event.data.type === 'console') {
+    if (event.data.method === 'error') {
+      isConsoleOpen.value = true
+    }
+    consoleLogs.value.push({
+      ...event.data,
+      id: Date.now() + Math.random()
+    })
+    // Keep only last 100 logs
+    if (consoleLogs.value.length > 100) {
+      consoleLogs.value.shift()
+    }
+  }
+}
 
 const { getCodeFromUrl, shareCode, shareOutput, shareButtonText } = useEditor()
 
@@ -180,6 +277,58 @@ const wrapHtml = (code: string) => {
           transition: background-color 0.3s, color 0.3s;
         }
       </style>
+      <script>
+        (function() {
+          const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+          };
+
+          function sendToParent(type, args) {
+            window.parent.postMessage({
+              type: 'console',
+              method: type,
+              args: Array.from(args).map(arg => {
+                try {
+                  if (arg instanceof Error) {
+                    return arg.message + (arg.stack ? '\\n' + arg.stack : '');
+                  }
+                  return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
+                } catch(e) {
+                  return String(arg);
+                }
+              })
+            }, '*');
+          }
+
+          console.log = function() {
+            sendToParent('log', arguments);
+            originalConsole.log.apply(console, arguments);
+          };
+          console.error = function() {
+            sendToParent('error', arguments);
+            originalConsole.error.apply(console, arguments);
+          };
+          console.warn = function() {
+            sendToParent('warn', arguments);
+            originalConsole.warn.apply(console, arguments);
+          };
+          console.info = function() {
+            sendToParent('info', arguments);
+            originalConsole.info.apply(console, arguments);
+          };
+
+          window.onerror = function(message, source, lineno, colno, error) {
+            sendToParent('error', [message, \`at \${source}:\${lineno}:\${colno}\`]);
+          };
+
+          window.onunhandledrejection = function(event) {
+            sendToParent('error', ['Unhandled Rejection: ' + event.reason]);
+          };
+        })();
+      <\/script>
     </head>
     <body>
     ${code}
@@ -189,6 +338,7 @@ const wrapHtml = (code: string) => {
 }
 
 const updateOutput = () => {
+  clearConsole()
   const content = editorStore.htmlCode || '<h1>No content available</h1>'
   const fullHtml = wrapHtml(content)
   
@@ -241,6 +391,7 @@ watch(() => editorStore.refreshCounter, () => {
 
 // Initialize iframe content on mount
 onMounted(async () => {
+  window.addEventListener('message', handleMessage)
   const code = await getCodeFromUrl()
   if (code) {
     editorStore.htmlCode = code
@@ -249,6 +400,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('message', handleMessage)
   if (lastBlobUrl.value) {
     URL.revokeObjectURL(lastBlobUrl.value)
   }

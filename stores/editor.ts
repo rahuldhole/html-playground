@@ -11,6 +11,7 @@ interface EditorState {
   isOutputFullscreen: boolean;
   fullscreenSwitch: number;
   refreshCounter: number;
+  aiFixRequested: string | null;
 }
 
 export const useEditorStore = defineStore('editor', {
@@ -23,6 +24,7 @@ export const useEditorStore = defineStore('editor', {
     isOutputFullscreen: false,
     fullscreenSwitch: 0, // New counter to trigger fullscreen events
     refreshCounter: 0, // Counter to trigger output refresh
+    aiFixRequested: null,
   }),
   actions: {
     setHtmlCode(code: string) {
@@ -70,6 +72,12 @@ export const useEditorStore = defineStore('editor', {
     },
     triggerRefresh() {
       this.refreshCounter++;
+    },
+    requestAIFix(errors: string) {
+      this.aiFixRequested = errors;
+    },
+    clearAIFix() {
+      this.aiFixRequested = null;
     }
   },
   persist: {

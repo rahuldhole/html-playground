@@ -347,6 +347,14 @@ const loadBoilerplate = (fileName: string) => {
     });
 }
 
+watch(() => editorStore.aiFixRequested, (newErrors) => {
+  if (newErrors) {
+    aiPrompt.value = `I'm getting the following console errors in my code. Please fix them:\n\n${newErrors}`
+    handleAISubmit()
+    editorStore.clearAIFix()
+  }
+})
+ 
 watch(() => editorStore.fullscreenSwitch, async (newVal, oldVal) => {
   if (newVal !== oldVal && fullScreenStore.isEditorFullscreen) {
     if (document.fullscreenElement) {
