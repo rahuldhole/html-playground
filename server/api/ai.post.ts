@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
       content: [
         {
           type: "text" as const,
-          text: SYSTEM_PROMPT,
+          text: systemPrompt,
           cache_control: { type: "ephemeral" as const }
         }
       ]
@@ -78,16 +78,7 @@ export default defineEventHandler(async (event) => {
       content: `### 📂 Context: Current Code in Editor
 ${code ? code : "(Editor is empty - New Project)"}
 
-### 💡 User Request
-${prompt}
-
-### 🚀 Implementation Task
-Apply the request to the context above. 
-1. **Prioritize Libraries**: Check the preferred CDN list and use professional libraries (Swiper, Chart.js, GSAP, etc.) instead of writing custom vanilla code for complex features.
-2. **Use Mock APIs**: Use the provided API list (DummyJSON, etc.) for any data-driven features.
-3. **Elevate Design**: Ensure a complete, premium, and responsive product.
-
-REMINDER: Output ONLY raw code. No markdown code blocks.`
+${prompt}`
     }
   ]
 
