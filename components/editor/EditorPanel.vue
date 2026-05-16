@@ -525,6 +525,9 @@ const handleAISubmit = async () => {
 
       try {
         let accumulatedCode = ''
+        // Flag to prevent stream chunks from overwriting the authoritative final code
+        let runCompleted = false
+        let finalRunCode: string | null = null
         
         await auth.withAuth({ accessToken: publicToken }, async () => {
           console.log('Authentication successful, starting streams for:', runId)
@@ -555,8 +558,8 @@ const handleAISubmit = async () => {
               let hasStarted = false
               console.log('[AI Client] Output stream connected, waiting for chunks...');
               for await (const chunk of (stream as AsyncIterable<string>)) {
-                if (signal.aborted) {
-                  console.log('[AI Client] Output stream aborted');
+                if (signal.aborted || runCompleted) {
+                  console.log('[AI Client] Output stream stopped (aborted or run completed)');
                   break
                 }
                 
@@ -594,17 +597,21 @@ const handleAISubmit = async () => {
 
                 if (run.status === 'COMPLETED') {
                   console.log('Run completed successfully')
-                  const finalCode = (run.output as any)?.code
-                  if (finalCode) {
-                    editorStore.setHtmlCode(finalCode)
+                  // Set flag FIRST to stop the output stream from writing more chunks
+                  runCompleted = true
+                  
+                  const code = (run.output as any)?.code
+                  if (code) {
+                    finalRunCode = code
+                    console.log('[AI Client] Final code from run output received, length:', code.length)
                   }
                   
-                  // Reset loading state immediately for UI feedback
+                  // Reset loading state for UI feedback
                   isAILoading.value = false
                   aiStatusText.value = 'Ready'
                   
-                  // Give streams a second to finish then abort to break the Promise.all hang
-                  setTimeout(() => controller.abort(), 1000)
+                  // Abort streams immediately since we have the authoritative final code
+                  controller.abort()
                   break 
                 } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
                   isAILoading.value = false
@@ -622,11 +629,28 @@ const handleAISubmit = async () => {
           })()
 
           // Wait for everything to finish
-          await Promise.all([
+          await Promise.allSettled([
             reasoningStreamPromise,
             outputStreamPromise,
             runSubscriptionPromise
           ])
+          
+          // Apply the authoritative final code AFTER all streams have stopped,
+          // so no stale stream chunk can overwrite it
+          if (finalRunCode) {
+            console.log('[AI Client] Applying authoritative final code from run output')
+            editorStore.setHtmlCode(finalRunCode)
+          } else if (runCompleted && accumulatedCode) {
+            // Fallback: run completed but output was empty — apply client-side diff result
+            console.warn('[AI Client] Run completed but no output code; applying client-side accumulated result')
+            let displayCode = accumulatedCode
+            if (isEditMode.value) {
+              displayCode = applyDiffsToCode(originalCode, accumulatedCode)
+            } else if (displayCode.includes('```')) {
+              displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
+            }
+            editorStore.setHtmlCode(displayCode)
+          }
         });
       } catch (err: any) {
         if (err.message?.includes('429') || err.message?.toLowerCase().includes('rate-limited')) {

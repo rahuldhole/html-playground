@@ -120,35 +120,48 @@ ${prompt}`
       if (mode === 'edit') {
         const blocks = accumulated.split('<<<<<<< SEARCH');
         let currentCode = code || '';
+        let appliedBlocks = 0;
+        let failedBlocks = 0;
         
-        for (let i = 1; i < blocks.length; i++) {
-          const block = blocks[i];
-          if (!block) continue;
-          
-          const parts = block.split('=======');
-          if (parts.length < 2) continue;
-          
-          const searchPart = parts[0];
-          const replacePart = parts[1];
-          if (searchPart === undefined || replacePart === undefined) continue;
+        if (blocks.length > 1) {
+          // We have search/replace blocks
+          for (let i = 1; i < blocks.length; i++) {
+            const block = blocks[i];
+            if (!block) continue;
+            
+            const parts = block.split('=======');
+            if (parts.length < 2) continue;
+            
+            const searchPart = parts[0];
+            const replacePart = parts[1];
+            if (searchPart === undefined || replacePart === undefined) continue;
 
-          // Strip only the boundary newlines from markers
-          const search = searchPart.replace(/^\n/, '').replace(/\n$/, '');
-          const replaceWithParts = replacePart.split('>>>>>>> REPLACE');
-          if (replaceWithParts.length < 1) continue;
-          
-          const replacementPart = replaceWithParts[0];
-          if (replacementPart === undefined) continue;
-          
-          const replacement = replacementPart.replace(/^\n/, '').replace(/\n$/, '');
-          
-          if (currentCode.includes(search)) {
-            currentCode = currentCode.replace(search, replacement);
-          } else {
-            console.warn("[AI Task] Could not find exact match for search block");
+            // Strip only the boundary newlines from markers
+            const search = searchPart.replace(/^\n/, '').replace(/\n$/, '');
+            const replaceWithParts = replacePart.split('>>>>>>> REPLACE');
+            if (replaceWithParts.length < 1) continue;
+            
+            const replacementPart = replaceWithParts[0];
+            if (replacementPart === undefined) continue;
+            
+            const replacement = replacementPart.replace(/^\n/, '').replace(/\n$/, '');
+            
+            if (currentCode.includes(search)) {
+              currentCode = currentCode.replace(search, replacement);
+              appliedBlocks++;
+            } else {
+              failedBlocks++;
+              console.warn(`[AI Task] Could not find exact match for search block #${i} (${search.length} chars). First 80 chars: "${search.slice(0, 80)}"`);
+            }
           }
+          
+          console.log(`[AI Task] Edit mode: ${appliedBlocks} blocks applied, ${failedBlocks} blocks failed out of ${blocks.length - 1} total`);
+          finalCode = currentCode;
+        } else {
+          // No SEARCH/REPLACE blocks found — AI produced full file output instead
+          console.warn("[AI Task] Edit mode but no SEARCH/REPLACE blocks found. Falling back to full file replacement.");
+          finalCode = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
         }
-        finalCode = currentCode;
       } else {
         // Clean up markdown blocks if the AI ignored instructions
         finalCode = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
