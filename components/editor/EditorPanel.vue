@@ -58,9 +58,14 @@
                   ></textarea>
                 </div>
 
-                <!-- Model Selection Nuxt UI -->
                 <div class="mb-3">
-                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">AI Model</label>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500">AI Model</label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                      <span class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 transition-colors">Edit Mode</span>
+                      <UCheckbox v-model="isEditMode" :disabled="!editorStore.htmlCode" size="xs" />
+                    </label>
+                  </div>
                   <USelectMenu 
                     v-model="selectedModel" 
                     :items="modelOptions" 
@@ -395,6 +400,10 @@ const showAIPopup = ref(false)
 const aiPrompt = ref('')
 const selectedModel = ref<ModelId>(DEFAULT_MODEL)
 const isAILoading = ref(false)
+const isEditMode = ref(!!editorStore.htmlCode)
+watch(() => editorStore.htmlCode, (val) => {
+  if (!val) isEditMode.value = false
+})
 const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
 const showSettings = ref(false)
@@ -433,6 +442,37 @@ const handleCancelAI = async () => {
   aiStatusText.value = 'Thinking...'
 }
 
+const applyDiffsToCode = (baseCode: string, diffStream: string) => {
+  const blocks = diffStream.split('<<<<<<< SEARCH');
+  let currentCode = baseCode;
+  
+  for (let i = 1; i < blocks.length; i++) {
+    const block = blocks[i];
+    if (block && block.includes('=======')) {
+      const parts = block.split('=======');
+      const searchPart = parts[0];
+      const rest = parts[1];
+      
+      if (searchPart !== undefined && rest !== undefined) {
+        const search = searchPart.trim();
+        if (rest.includes('>>>>>>> REPLACE')) {
+          const replacement = rest.split('>>>>>>> REPLACE')[0]?.trim();
+          if (replacement !== undefined && currentCode.includes(search)) {
+            currentCode = currentCode.replace(search, replacement);
+          }
+        } else {
+          // Still writing the replacement for this block
+          const partialReplacement = rest.trim();
+          if (currentCode.includes(search)) {
+             currentCode = currentCode.replace(search, partialReplacement);
+          }
+        }
+      }
+    }
+  }
+  return currentCode;
+}
+
 const handleAISubmit = async () => {
   if (isAILoading.value || !aiPrompt.value) return
   
@@ -449,6 +489,7 @@ const handleAISubmit = async () => {
   const controller = new AbortController()
   abortController.value = controller
   const signal = controller.signal
+  const originalCode = editorStore.htmlCode
   
   try {
     console.log('Initiating AI request...')
@@ -462,7 +503,8 @@ const handleAISubmit = async () => {
         prompt: aiPrompt.value,
         code: editorStore.htmlCode,
         model: selectedModel.value,
-        systemPrompt: editorStore.systemPrompt
+        systemPrompt: editorStore.systemPrompt,
+        mode: isEditMode.value ? 'edit' : 'full'
       })
     })
 
@@ -522,8 +564,9 @@ const handleAISubmit = async () => {
                 accumulatedCode += chunk
                 
                 let displayCode = accumulatedCode
-                // Clean up markdown blocks if they appear in the stream
-                if (displayCode.includes('```')) {
+                if (isEditMode.value) {
+                  displayCode = applyDiffsToCode(originalCode, accumulatedCode)
+                } else if (displayCode.includes('```')) {
                   displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
                 }
                 editorStore.setHtmlCode(displayCode)
@@ -605,7 +648,9 @@ const handleAISubmit = async () => {
           accumulatedCode += chunk
           
           let displayCode = accumulatedCode
-          if (displayCode.startsWith('```')) {
+          if (isEditMode.value) {
+            displayCode = applyDiffsToCode(originalCode, accumulatedCode)
+          } else if (displayCode.startsWith('```')) {
               displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
           }
           editorStore.setHtmlCode(displayCode)

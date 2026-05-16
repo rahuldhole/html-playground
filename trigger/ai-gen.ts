@@ -9,6 +9,7 @@ export interface AIGenPayload {
   apiKey: string;
   model?: string;
   systemPrompt?: string;
+  mode?: 'edit' | 'full';
 }
 
 export const aiGenerateTask = task({
@@ -21,13 +22,11 @@ export const aiGenerateTask = task({
   },
   maxDuration: 3600, // Maximum allowed duration (1 hour)
   run: async (payload: AIGenPayload) => {
-    const { prompt, code, apiKey, model, systemPrompt: customSystemPrompt } = payload;
+    const { prompt, code, apiKey, model, systemPrompt: customSystemPrompt, mode } = payload;
 
     const sdk = new OpenRouter({
       apiKey: apiKey,
     });
-
-    const systemPrompt = (customSystemPrompt ? (customSystemPrompt + "\n\n") : "") + TECHNICAL_CONSTRAINTS;
 
     const messages = [
       {
@@ -35,7 +34,7 @@ export const aiGenerateTask = task({
         content: [
           {
             type: "text" as const,
-            text: systemPrompt,
+            text: customSystemPrompt || TECHNICAL_CONSTRAINTS,
             cache_control: { type: "ephemeral" as const }
           }
         ]
@@ -102,11 +101,46 @@ ${prompt}`
       }
       console.log(`[AI Task] Stream finished. Total length: ${accumulated.length}`);
 
-      // Clean up markdown blocks if the AI ignored instructions
-      const cleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
+      let finalCode = accumulated;
+      
+      if (mode === 'edit') {
+        const blocks = accumulated.split('<<<<<<< SEARCH');
+        let currentCode = code || '';
+        
+        for (let i = 1; i < blocks.length; i++) {
+          const block = blocks[i];
+          if (!block) continue;
+          
+          const parts = block.split('=======');
+          if (parts.length < 2) continue;
+          
+          const searchPart = parts[0];
+          const replacePart = parts[1];
+          if (searchPart === undefined || replacePart === undefined) continue;
+
+          const search = searchPart.trim();
+          const replaceWithParts = replacePart.split('>>>>>>> REPLACE');
+          if (replaceWithParts.length < 1) continue;
+          
+          const replacementPart = replaceWithParts[0];
+          if (replacementPart === undefined) continue;
+          
+          const replacement = replacementPart.trim();
+          
+          if (currentCode.includes(search)) {
+            currentCode = currentCode.replace(search, replacement);
+          } else {
+            console.warn("[AI Task] Could not find exact match for search block");
+          }
+        }
+        finalCode = currentCode;
+      } else {
+        // Clean up markdown blocks if the AI ignored instructions
+        finalCode = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
+      }
 
       return {
-        code: cleaned
+        code: finalCode
       };
     } catch (error: any) {
       console.error('OpenRouter Error in Task:', error);

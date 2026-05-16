@@ -1,14 +1,15 @@
 import { tasks, auth, configure } from "@trigger.dev/sdk/v3"
 import { OpenRouter } from '@openrouter/sdk'
-import { TECHNICAL_CONSTRAINTS } from '../../shared/prompt'
+import { TECHNICAL_CONSTRAINTS, EDIT_CONSTRAINTS } from '../../shared/prompt'
 import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
-  const { prompt, code, model, systemPrompt: customSystemPrompt } = await readBody(event)
-  console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..." Model: ${model}`)
+  const { prompt, code, model, systemPrompt: customSystemPrompt, mode } = await readBody(event)
+  console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..." Model: ${model} Mode: ${mode}`)
   const config = useRuntimeConfig()
 
-  const systemPrompt = (customSystemPrompt ? (customSystemPrompt + "\n\n") : "") + TECHNICAL_CONSTRAINTS
+  const isEdit = mode === 'edit' && code && code.length > 0
+  const systemPrompt = (customSystemPrompt ? (customSystemPrompt + "\n\n") : "") + (isEdit ? EDIT_CONSTRAINTS : TECHNICAL_CONSTRAINTS)
 
   // Ensure Trigger.dev is configured if key is available
   if (config.triggerSecretKey) {
@@ -31,6 +32,7 @@ export default defineEventHandler(async (event) => {
         prompt,
         code,
         model,
+        mode,
         apiKey: config.openRouterKey,
         systemPrompt: systemPrompt
       })
