@@ -556,7 +556,7 @@ const handleAISubmit = async () => {
             try {
               console.log('Reading reasoning stream for:', runId)
               const stream = await streams.read(runId, "ai-reasoning", { timeoutInSeconds: 600 })
-              for await (const chunk of stream) {
+              for await (const chunk of (stream as AsyncIterable<string>)) {
                 if (signal.aborted) {
                   console.log('[AI Client] Reasoning stream aborted');
                   break
@@ -576,7 +576,7 @@ const handleAISubmit = async () => {
               const stream = await streams.read(runId, "ai-output", { timeoutInSeconds: 600 })
               let hasStarted = false
               console.log('[AI Client] Output stream connected, waiting for chunks...');
-              for await (const chunk of stream) {
+              for await (const chunk of (stream as AsyncIterable<string>)) {
                 if (signal.aborted) {
                   console.log('[AI Client] Output stream aborted');
                   break
