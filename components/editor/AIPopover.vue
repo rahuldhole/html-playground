@@ -1,12 +1,6 @@
 <template>
-  <UPopover 
-    :popper="{ placement: 'bottom-start', offsetDistance: 12, strategy: 'fixed' }" 
-    :ui="{ 
-      content: isMobile 
-        ? 'w-[calc(100vw-2rem)] max-w-sm rounded-[1.5rem] shadow-2xl bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-gray-100 dark:border-gray-800/50 ring-1 ring-black/5 dark:ring-white/5'
-        : 'w-80 md:w-96 rounded-[1.5rem] shadow-2xl bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-gray-100 dark:border-gray-800/50 ring-1 ring-black/5 dark:ring-white/5'
-    }"
-  >
+  <div class="relative inline-block">
+    <!-- Trigger Button -->
     <button
       class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
       :class="[
@@ -19,7 +13,15 @@
       <span v-if="!isMobile && !isCompact">AI</span>
     </button>
 
-    <template #content>
+    <!-- Custom Persistent Popover Content -->
+    <div v-if="showAIPopup" 
+      class="absolute top-full left-0 mt-3 z-[1000] overflow-hidden"
+      :class="[
+        isMobile 
+          ? 'fixed inset-x-4 top-20 bottom-auto mx-auto max-w-sm rounded-[1.5rem] shadow-2xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-gray-800 ring-1 ring-black/5 dark:ring-white/5'
+          : 'w-80 md:w-96 rounded-[1.5rem] shadow-2xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-gray-800 ring-1 ring-black/5 dark:ring-white/5'
+      ]"
+    >
       <div class="p-5 space-y-4 md:space-y-5">
         <!-- Header -->
         <div class="flex items-center justify-between">
@@ -38,9 +40,14 @@
               <p v-if="!isMobile" class="text-[10px] text-gray-500 dark:text-gray-400 leading-none mt-0.5">How can I help you today?</p>
             </div>
           </div>
-          <span v-if="isMobile" class="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase tracking-wider">
-            {{ isEditMode ? 'Edit' : 'New' }}
-          </span>
+          <div class="flex items-center gap-2">
+            <span v-if="isMobile" class="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase tracking-wider">
+              {{ isEditMode ? 'Edit' : 'New' }}
+            </span>
+            <button @click="showAIPopup = false" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+              <Icon name="heroicons:x-mark" class="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <!-- Thinking Status -->
@@ -144,8 +151,8 @@
           <span>{{ isAILoading ? 'Syncing...' : 'Magic Sync' }}</span>
         </button>
       </div>
-    </template>
-  </UPopover>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

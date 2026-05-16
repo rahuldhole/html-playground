@@ -31,7 +31,7 @@
                 :ai-status-text="aiStatusText"
                 :model-options="modelOptions"
                 :current-model="currentModel"
-                v-model:show-a-i-popup="showAIPopup"
+                v-model:showAIPopup="showAIPopup"
                 v-model:ai-prompt="aiPrompt"
                 v-model:selected-model="selectedModel"
                 @submit="handleAISubmit"
@@ -350,6 +350,7 @@ const loadBoilerplate = (fileName: string) => {
 watch(() => editorStore.aiFixRequested, (newErrors) => {
   if (newErrors) {
     aiPrompt.value = `I'm getting the following console errors in my code. Please fix them:\n\n${newErrors}`
+    showAIPopup.value = true
     handleAISubmit()
     editorStore.clearAIFix()
   }

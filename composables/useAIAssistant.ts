@@ -164,7 +164,6 @@ export function useAIAssistant(
                   
                   if (!hasStarted) {
                     hasStarted = true
-                    showAIPopup.value = false
                     aiPrompt.value = ''
                   }
                   accumulatedCode += chunk
@@ -269,7 +268,6 @@ export function useAIAssistant(
             
             if (!hasStarted) {
               hasStarted = true
-              showAIPopup.value = false
               aiPrompt.value = ''
             }
 
