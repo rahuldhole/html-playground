@@ -52,6 +52,36 @@
                     class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   ></textarea>
                 </div>
+
+                <!-- Model Selection -->
+                <div class="mb-3">
+                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">Model</label>
+                  <div class="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar p-0.5">
+                    <button 
+                      v-for="model in Object.values(MODELS)" 
+                      :key="model.id"
+                      @click="selectedModel = model.id"
+                      class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all border group"
+                      :class="selectedModel === model.id 
+                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 ring-1 ring-indigo-500/20' 
+                        : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+                    >
+                      <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md"
+                        :class="selectedModel === model.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'">
+                        <Icon v-if="model.icon" :name="model.icon" class="w-3.5 h-3.5" />
+                        <Icon v-else name="heroicons:cpu-chip" class="w-3.5 h-3.5" />
+                      </div>
+                      <div class="min-w-0 flex-grow">
+                        <div class="text-[10px] font-bold truncate" :class="selectedModel === model.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">
+                          {{ model.name }}
+                        </div>
+                        <div class="text-[8px] text-gray-400 dark:text-gray-500 truncate leading-tight">
+                          {{ model.description }}
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
                 <div class="flex items-center justify-end gap-2">
                   <button 
                     v-if="isAILoading"
@@ -144,6 +174,25 @@
                     placeholder="e.g. Add a dark theme button..."
                     class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   ></textarea>
+                </div>
+
+                <!-- Model Selection Mobile -->
+                <div class="mb-3">
+                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1.5 block">AI Model</label>
+                  <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar snap-x">
+                    <button 
+                      v-for="model in Object.values(MODELS)" 
+                      :key="model.id"
+                      @click="selectedModel = model.id"
+                      class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all border snap-start"
+                      :class="selectedModel === model.id 
+                        ? 'bg-indigo-600 border-indigo-600 text-white ring-4 ring-indigo-500/10' 
+                        : 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-400'"
+                    >
+                      <Icon v-if="model.icon" :name="model.icon" class="w-4 h-4" />
+                      <span class="text-[10px] font-bold whitespace-nowrap">{{ model.name }}</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="flex items-center justify-end gap-2">
                   <button 
@@ -276,6 +325,7 @@ import EditorSharePopover from './SharePopover.vue'
 import { useEditorStore } from '~/stores/editor'
 import { useEditor } from '~/composables/useEditor'
 import { useFullScreenStore } from '~/stores/fullScreenStore'
+import { MODELS, DEFAULT_MODEL, type ModelId } from '~/shared/models'
 
 // Connect to the store
 const editorStore = useEditorStore()
@@ -293,6 +343,7 @@ const showShareMenu = ref(false)
 // AI Assistant
 const showAIPopup = ref(false)
 const aiPrompt = ref('')
+const selectedModel = ref<ModelId>(DEFAULT_MODEL)
 const isAILoading = ref(false)
 const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
@@ -350,7 +401,8 @@ const handleAISubmit = async () => {
       signal: abortController.value.signal,
       body: JSON.stringify({
         prompt: aiPrompt.value,
-        code: editorStore.htmlCode
+        code: editorStore.htmlCode,
+        model: selectedModel.value
       })
     })
 

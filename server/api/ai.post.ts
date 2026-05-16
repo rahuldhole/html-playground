@@ -4,8 +4,8 @@ import { SYSTEM_PROMPT } from '../utils/prompt'
 import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
-  const { prompt, code } = await readBody(event)
-  console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..."`)
+  const { prompt, code, model } = await readBody(event)
+  console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..." Model: ${model}`)
   const config = useRuntimeConfig()
 
   // Ensure Trigger.dev is configured if key is available
@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
       const handle = await tasks.trigger<typeof aiGenerateTask>("ai-generate", {
         prompt,
         code,
+        model,
         apiKey: config.openRouterKey
       })
 
@@ -79,7 +80,7 @@ export default defineEventHandler(async (event) => {
     const stream = await sdk.chat.send({
       appTitle: "Minimalist HTML IDE",
       chatRequest: {
-        model: "openrouter/free",
+        model: model || "openrouter/free",
         messages: messages,
         stream: true
       }

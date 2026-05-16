@@ -7,12 +7,13 @@ export interface AIGenPayload {
   prompt: string;
   code: string;
   apiKey: string;
+  model?: string;
 }
 
 export const aiGenerateTask = task({
   id: "ai-generate",
   run: async (payload: AIGenPayload) => {
-    const { prompt, code, apiKey } = payload;
+    const { prompt, code, apiKey, model } = payload;
 
     const sdk = new OpenRouter({
       apiKey: apiKey,
@@ -39,7 +40,7 @@ export const aiGenerateTask = task({
       const stream = await sdk.chat.send({
         appTitle: "Minimalist HTML IDE",
         chatRequest: {
-          model: "openrouter/free", 
+          model: model || "openrouter/free", 
           messages: messages,
           stream: true
         }
