@@ -73,7 +73,10 @@
                     placeholder="Select a model"
                     class="w-full"
                     :ui="{ 
-                      base: 'bg-gray-50 dark:bg-gray-900 rounded-lg ring-0 border border-gray-100 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500'
+                      base: 'bg-gray-50 dark:bg-gray-900 rounded-lg ring-0 border border-gray-100 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500',
+                      background: 'bg-white dark:bg-gray-900',
+                      ring: 'ring-1 ring-gray-200 dark:ring-gray-800',
+                      shadow: 'shadow-xl'
                     }"
                     :popper="{ zIndex: 9999, strategy: 'fixed' }"
                     :portal="false"
@@ -215,7 +218,10 @@
                     value-key="id"
                     class="w-full"
                     :ui="{ 
-                      base: 'bg-gray-50 dark:bg-gray-900 rounded-xl ring-0 border border-gray-100 dark:border-gray-700'
+                      base: 'bg-gray-50 dark:bg-gray-900 rounded-xl ring-0 border border-gray-100 dark:border-gray-700',
+                      background: 'bg-white dark:bg-gray-900',
+                      ring: 'ring-1 ring-gray-200 dark:ring-gray-800',
+                      shadow: 'shadow-xl'
                     }"
                     :popper="{ zIndex: 9999, strategy: 'fixed' }"
                     :portal="false"
