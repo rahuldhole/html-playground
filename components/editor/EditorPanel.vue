@@ -58,34 +58,42 @@
                   ></textarea>
                 </div>
 
-                <!-- Model Selection -->
+                <!-- Model Selection Nuxt UI -->
                 <div class="mb-3">
-                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">Model</label>
-                  <div class="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar p-0.5">
-                    <button 
-                      v-for="model in Object.values(MODELS)" 
-                      :key="model.id"
-                      @click="selectedModel = model.id"
-                      class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all border group"
-                      :class="selectedModel === model.id 
-                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 ring-1 ring-indigo-500/20' 
-                        : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
-                    >
-                      <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md"
-                        :class="selectedModel === model.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'">
-                        <Icon v-if="model.icon" :name="model.icon" class="w-3.5 h-3.5" />
-                        <Icon v-else name="heroicons:cpu-chip" class="w-3.5 h-3.5" />
+                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">AI Model</label>
+                  <USelectMenu 
+                    v-model="selectedModel" 
+                    :items="modelOptions" 
+                    value-key="id"
+                    placeholder="Select a model"
+                    class="w-full"
+                    :ui="{ 
+                      base: 'bg-gray-50 dark:bg-gray-900 rounded-lg ring-0 border border-gray-100 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500'
+                    }"
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-md bg-indigo-600 text-white">
+                        <Icon :name="currentModel?.icon || 'heroicons:cpu-chip'" class="w-3 h-3" />
                       </div>
-                      <div class="min-w-0 flex-grow">
-                        <div class="text-[10px] font-bold truncate" :class="selectedModel === model.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'">
-                          {{ model.name }}
+                      <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200 truncate">{{ currentModel?.name }}</span>
+                    </div>
+
+                    <template #item="{ item: model }">
+                      <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-gray-100 dark:bg-gray-700 text-gray-400">
+                          <Icon :name="model.icon || 'heroicons:cpu-chip'" class="w-4 h-4" />
                         </div>
-                        <div class="text-[8px] text-gray-400 dark:text-gray-500 truncate leading-tight">
-                          {{ model.description }}
+                        <div class="min-w-0 flex-grow">
+                          <div class="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">
+                            {{ model.label }}
+                          </div>
+                          <div class="text-[8px] text-gray-400 dark:text-gray-500 truncate leading-tight">
+                            {{ model.description }}
+                          </div>
                         </div>
                       </div>
-                    </button>
-                  </div>
+                    </template>
+                  </USelectMenu>
                 </div>
                 <div class="flex items-center justify-between gap-2 mt-1">
                   <button @click="showSettings = true" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-all" title="AI System Settings">
@@ -191,23 +199,41 @@
                   ></textarea>
                 </div>
 
-                <!-- Model Selection Mobile -->
+                <!-- Model Selection Mobile Nuxt UI -->
                 <div class="mb-3">
                   <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1.5 block">AI Model</label>
-                  <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar snap-x">
-                    <button 
-                      v-for="model in Object.values(MODELS)" 
-                      :key="model.id"
-                      @click="selectedModel = model.id"
-                      class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all border snap-start"
-                      :class="selectedModel === model.id 
-                        ? 'bg-indigo-600 border-indigo-600 text-white ring-4 ring-indigo-500/10' 
-                        : 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-400'"
-                    >
-                      <Icon v-if="model.icon" :name="model.icon" class="w-4 h-4" />
-                      <span class="text-[10px] font-bold whitespace-nowrap">{{ model.name }}</span>
-                    </button>
-                  </div>
+                  <USelectMenu 
+                    v-model="selectedModel" 
+                    :items="modelOptions" 
+                    value-key="id"
+                    class="w-full"
+                    :ui="{ 
+                      base: 'bg-gray-50 dark:bg-gray-900 rounded-xl ring-0 border border-gray-100 dark:border-gray-700'
+                    }"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-indigo-600 text-white">
+                        <Icon :name="currentModel?.icon || 'heroicons:cpu-chip'" class="w-4 h-4" />
+                      </div>
+                      <span class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ currentModel?.name }}</span>
+                    </div>
+
+                    <template #item="{ item: model }">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-400">
+                          <Icon :name="model.icon || 'heroicons:cpu-chip'" class="w-4.5 h-4.5" />
+                        </div>
+                        <div class="min-w-0 flex-grow">
+                          <div class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">
+                            {{ model.label }}
+                          </div>
+                          <div class="text-[10px] text-gray-400 dark:text-gray-500 truncate leading-tight">
+                            {{ model.description }}
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </USelectMenu>
                 </div>
                 <div class="flex items-center justify-between gap-2 mt-1">
                   <button @click="showSettings = true" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-all" title="AI System Settings">
@@ -368,9 +394,17 @@ const isAILoading = ref(false)
 const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
 const showSettings = ref(false)
+const currentModel = computed(() => Object.values(MODELS).find(m => m.id === selectedModel.value) || Object.values(MODELS)[0])
 const abortController = ref<AbortController | null>(null)
 const currentRunId = ref<string | null>(null)
 const userHasScrolledUp = ref(false)
+
+const modelOptions = Object.values(MODELS).map(m => ({
+  id: m.id as ModelId,
+  label: m.name,
+  description: m.description,
+  icon: m.icon
+}))
 
 const handleCancelAI = async () => {
   if (abortController.value) {
@@ -419,7 +453,7 @@ const handleAISubmit = async () => {
       headers: {
         "Content-Type": "application/json",
       },
-      signal: abortController.value.signal,
+      signal,
       body: JSON.stringify({
         prompt: aiPrompt.value,
         code: editorStore.htmlCode,

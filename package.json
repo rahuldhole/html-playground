@@ -25,6 +25,7 @@
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.39.11",
     "@nuxt/icon": "^2.2.1",
+    "@nuxt/ui": "^4.7.1",
     "@nuxtjs/color-mode": "^4.0.0",
     "@nuxtjs/google-adsense": "^3.0.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
@@ -49,9 +50,11 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
     "@trigger.dev/build": "4.4.6",
     "@types/js-beautify": "^1.14.3",
     "@types/node": "^25.6.1",
+    "tailwindcss": "^4.3.0",
     "wrangler": "^4.90.0"
   }
 }
