@@ -1,4 +1,5 @@
-import { task, streams } from "@trigger.dev/sdk/v3";
+import * as trigger from "@trigger.dev/sdk/v3";
+const { task, streams } = trigger as any;
 import { OpenRouter } from '@openrouter/sdk'
 
 import { SYSTEM_PROMPT } from "../server/utils/prompt";

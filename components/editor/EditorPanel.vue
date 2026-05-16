@@ -420,7 +420,9 @@ const handleAISubmit = async () => {
       currentRunId.value = runId
       
       // Configure the SDK with the public token for this session
-      const { runs, streams, auth } = await import("@trigger.dev/sdk/v3")
+      const sdk = await import("@trigger.dev/sdk/v3")
+      const { runs, auth } = sdk
+      const streams = (sdk as any).streams
 
       aiStatusText.value = 'Initializing...'
 
