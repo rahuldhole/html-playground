@@ -22,110 +22,132 @@
             </div>
 
             <div class="relative ml-1">
-              <button @click.stop="showAIPopup = !showAIPopup"
-                class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
-                :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'">
-                <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
-                <span v-if="!isCompact">AI</span>
-              </button>
-              
-              <!-- AI Prompt Popup -->
-              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-[110]">
-                <!-- Settings Modal -->
-                <SettingsModal v-model="showSettings" />
+              <UPopover 
+                :popper="{ placement: 'bottom-start', offsetDistance: 12, strategy: 'fixed' }" 
+                :ui="{ 
+                  content: 'w-80 md:w-96 rounded-[1.5rem] shadow-2xl bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-gray-100 dark:border-gray-800/50 ring-1 ring-black/5 dark:ring-white/5'
+                }"
+              >
+                <button
+                  class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
+                  :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'">
+                  <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
+                  <span v-if="!isCompact">AI</span>
+                </button>
 
-                <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" class="mb-3 p-2 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100/50 dark:border-indigo-800/50 max-h-32 overflow-y-auto custom-scrollbar">
-                  <div class="flex items-center gap-2 mb-1 sticky top-0 bg-transparent">
-                    <Icon name="heroicons:light-bulb" class="w-3 h-3 text-indigo-500 animate-pulse" />
-                    <span class="text-[9px] font-bold uppercase text-indigo-500 tracking-wider">AI Thinking</span>
-                  </div>
-                  <p class="text-[10px] text-gray-600 dark:text-gray-400 italic">
-                    {{ aiReasoning || aiStatusText }}
-                  </p>
-                </div>
-
-                <div class="mb-2">
-                  <div class="mb-1">
-                    <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 block">What should AI do?</label>
-                  </div>
-                  <textarea 
-                    ref="aiInput"
-                    v-model="aiPrompt"
-                    @keydown.enter.exact.prevent="handleAISubmit"
-                    :disabled="isAILoading"
-                    placeholder="e.g. Add a dark theme button or fix the layout..."
-                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
-                  ></textarea>
-                </div>
-
-                <div class="mb-3">
-                  <div class="flex items-center justify-between mb-1">
-                    <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500">AI Model</label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                      <span class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 transition-colors">Edit Mode</span>
-                      <UCheckbox v-model="isEditMode" :disabled="!editorStore.htmlCode" size="xs" />
-                    </label>
-                  </div>
-                  <USelectMenu 
-                    v-model="selectedModel" 
-                    :items="modelOptions" 
-                    value-key="id"
-                    placeholder="Select a model"
-                    class="w-full"
-                    :ui="{ 
-                      base: 'bg-gray-50 dark:bg-gray-900 rounded-lg ring-0 border border-gray-100 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500'
-                    }"
-                    :popper="{ zIndex: 9999, strategy: 'fixed' }"
-                    :portal="false"
-                  >
-                    <div class="flex items-center gap-2 min-w-0">
-                      <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-md bg-indigo-600 text-white">
-                        <Icon :name="currentModel?.icon || 'heroicons:cpu-chip'" class="w-3 h-3" />
+                <template #content>
+                  <div class="p-5 space-y-5">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                          <Icon name="heroicons:sparkles" class="w-4.5 h-4.5 text-white" />
+                        </div>
+                        <div>
+                          <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            AI Assistant
+                            <span class="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase tracking-wider border border-indigo-100/50 dark:border-indigo-500/20">
+                              {{ isEditMode ? 'Edit' : 'New' }}
+                            </span>
+                          </h3>
+                          <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-none mt-0.5">How can I help you today?</p>
+                        </div>
                       </div>
-                      <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200 truncate">{{ currentModel?.name }}</span>
                     </div>
 
-                    <template #item="{ item: model }">
-                      <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-gray-100 dark:bg-gray-700 text-gray-400">
-                          <Icon :name="model.icon || 'heroicons:cpu-chip'" class="w-4 h-4" />
+                    <!-- Thinking Status -->
+                    <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" 
+                      class="p-3 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-2xl border border-indigo-500/10 dark:border-indigo-500/20">
+                      <div class="flex items-center gap-2 mb-1.5">
+                        <div class="flex gap-0.5">
+                          <span class="w-1 h-1 rounded-full bg-indigo-500 animate-bounce [animation-delay:-0.3s]"></span>
+                          <span class="w-1 h-1 rounded-full bg-indigo-500 animate-bounce [animation-delay:-0.15s]"></span>
+                          <span class="w-1 h-1 rounded-full bg-indigo-500 animate-bounce"></span>
                         </div>
-                        <div class="min-w-0 flex-grow">
-                          <div class="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">
-                            {{ model.label }}
-                          </div>
-                          <div class="text-[8px] text-gray-400 dark:text-gray-500 truncate leading-tight">
-                            {{ model.description }}
-                          </div>
-                        </div>
+                        <span class="text-[9px] font-bold uppercase text-indigo-600 dark:text-indigo-400 tracking-widest">Reasoning</span>
                       </div>
-                    </template>
-                  </USelectMenu>
-                </div>
-                <div class="flex items-center justify-between gap-2 mt-1">
-                  <button @click="showSettings = true" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-all" title="AI System Settings">
-                    <Icon name="heroicons:cog-6-tooth" class="w-4 h-4" />
-                  </button>
-                  <div class="flex items-center gap-2">
-                    <button 
-                      v-if="isAILoading"
-                      @click="handleCancelAI"
-                      class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
-                    >
-                      <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
-                      <span>Cancel</span>
-                    </button>
-                    <button 
-                      @click="handleAISubmit"
-                      :disabled="isAILoading || !aiPrompt"
-                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
-                    >
-                      <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                      <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
-                    </button>
+                      <p class="text-[11px] text-gray-600 dark:text-gray-300 italic leading-snug">
+                        {{ aiReasoning || aiStatusText }}
+                      </p>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Instruction</label>
+                      </div>
+                      <textarea 
+                        ref="aiInput"
+                        v-model="aiPrompt"
+                        @keydown.enter.exact.prevent="handleAISubmit"
+                        :disabled="isAILoading"
+                        placeholder="e.g. Add a dark theme or fix the layout..."
+                        class="w-full h-28 bg-gray-50/50 dark:bg-gray-950/50 border border-gray-100 dark:border-gray-800 rounded-2xl p-3.5 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all resize-none disabled:opacity-50 placeholder:text-gray-400 dark:placeholder:text-gray-600 shadow-inner"
+                      ></textarea>
+                    </div>
+
+                    <!-- Model Row -->
+                    <div class="flex items-center gap-3">
+                      <div class="flex-1">
+                        <USelectMenu 
+                          v-model="selectedModel" 
+                          :items="modelOptions" 
+                          value-key="id"
+                          class="w-full"
+                          :ui="{ 
+                            base: 'bg-white dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-800 h-10 transition-all hover:border-indigo-500/50',
+                            content: 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl rounded-2xl'
+                          }"
+                          :popper="{ zIndex: 10001, strategy: 'fixed' }"
+                        >
+                          <template #default>
+                            <div class="flex items-center gap-2 px-3 py-2">
+                              <Icon :name="currentModel?.icon || 'heroicons:cpu-chip'" class="w-4 h-4 text-indigo-500" />
+                              <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate">{{ currentModel?.name }}</span>
+                            </div>
+                          </template>
+                          <template #item="{ item: model }">
+                            <div class="flex items-center gap-2.5 py-1.5 w-full">
+                              <div class="w-7 h-7 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+                                <Icon :name="model.icon || 'heroicons:cpu-chip'" class="w-4 h-4" />
+                              </div>
+                              <p class="text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate">{{ model.label }}</p>
+                            </div>
+                          </template>
+                        </USelectMenu>
+                      </div>
+                      <button @click="showSettings = true" 
+                        class="h-10 px-3.5 bg-gray-50 dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-xl text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center">
+                        <Icon name="heroicons:cog-6-tooth" class="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-between pt-1">
+                      <p class="text-[9px] text-gray-400 italic hidden sm:block">Press Enter to sync</p>
+                      <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button 
+                          v-if="isAILoading"
+                          @click="handleCancelAI"
+                          class="flex-1 sm:flex-none px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-2"
+                        >
+                          <Icon name="heroicons:stop-circle" class="w-4 h-4" />
+                          <span>Stop</span>
+                        </button>
+                        <button 
+                          @click="handleAISubmit"
+                          :disabled="isAILoading || !aiPrompt"
+                          class="flex-1 sm:flex-none px-6 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-[10px] font-bold uppercase shadow-xl shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+                          <Icon v-else name="heroicons:bolt" class="w-4 h-4" />
+                          <span>{{ isAILoading ? 'Generating...' : 'Generate' }}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </template>
+              </UPopover>
             </div>
 
             <div class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
@@ -171,103 +193,66 @@
             </div>
 
             <div class="relative ml-1">
-              <button @click.stop="showAIPopup = !showAIPopup"
-                class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
-                :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'">
-                <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
-              </button>
-              
-              <!-- AI Prompt Popup (Mobile specific adjustments) -->
-              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-[110]">
-                <!-- Settings Modal -->
-                <SettingsModal v-model="showSettings" />
-                
-                <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" class="mb-3 p-2 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100/50 dark:border-indigo-800/50 max-h-24 overflow-y-auto">
-                  <div class="flex items-center gap-2 mb-1">
-                    <Icon name="heroicons:light-bulb" class="w-3 h-3 text-indigo-500 animate-pulse" />
-                    <span class="text-[9px] font-bold uppercase text-indigo-500 tracking-wider">AI Thinking</span>
-                  </div>
-                  <p class="text-[10px] text-gray-600 dark:text-gray-400 italic">
-                    {{ aiReasoning || aiStatusText }}
-                  </p>
-                </div>
+              <UPopover 
+                :popper="{ placement: 'bottom-start', offsetDistance: 12, strategy: 'fixed' }" 
+                :ui="{ 
+                  content: 'w-[calc(100vw-2rem)] max-w-sm rounded-[1.5rem] shadow-2xl bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-gray-100 dark:border-gray-800/50 ring-1 ring-black/5 dark:ring-white/5'
+                }"
+              >
+                <button
+                  class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase transition-all shadow-sm"
+                  :class="showAIPopup ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'">
+                  <Icon name="heroicons:sparkles" class="w-3.5 h-3.5" :class="{ 'animate-pulse': isAILoading }" />
+                </button>
 
-                <div class="mb-2">
-                  <div class="mb-1">
-                    <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 block">What should AI do?</label>
-                  </div>
-                  <textarea 
-                    ref="aiInputMobile"
-                    v-model="aiPrompt"
-                    @keydown.enter.exact.prevent="handleAISubmit"
-                    :disabled="isAILoading"
-                    placeholder="e.g. Add a dark theme button..."
-                    class="w-full h-20 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50"
-                  ></textarea>
-                </div>
-
-                <!-- Model Selection Mobile Nuxt UI -->
-                <div class="mb-3">
-                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1.5 block">AI Model</label>
-                  <USelectMenu 
-                    v-model="selectedModel" 
-                    :items="modelOptions" 
-                    value-key="id"
-                    class="w-full"
-                    :ui="{ 
-                      base: 'bg-gray-50 dark:bg-gray-900 rounded-xl ring-0 border border-gray-100 dark:border-gray-700'
-                    }"
-                    :popper="{ zIndex: 9999, strategy: 'fixed' }"
-                    :portal="false"
-                  >
-                    <div class="flex items-center gap-3">
-                      <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-indigo-600 text-white">
-                        <Icon :name="currentModel?.icon || 'heroicons:cpu-chip'" class="w-4 h-4" />
+                <template #content>
+                  <div class="p-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                          <Icon name="heroicons:sparkles" class="w-4.5 h-4.5 text-white" />
+                        </div>
+                        <span class="text-xs font-bold text-gray-900 dark:text-white">Magic Assistant</span>
                       </div>
-                      <span class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ currentModel?.name }}</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase tracking-wider">
+                        {{ isEditMode ? 'Edit' : 'New' }}
+                      </span>
                     </div>
 
-                    <template #item="{ item: model }">
-                      <div class="flex items-center gap-3 min-w-0">
-                        <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-400">
-                          <Icon :name="model.icon || 'heroicons:cpu-chip'" class="w-4.5 h-4.5" />
-                        </div>
-                        <div class="min-w-0 flex-grow">
-                          <div class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">
-                            {{ model.label }}
-                          </div>
-                          <div class="text-[10px] text-gray-400 dark:text-gray-500 truncate leading-tight">
-                            {{ model.description }}
-                          </div>
-                        </div>
-                      </div>
-                    </template>
-                  </USelectMenu>
-                </div>
-                <div class="flex items-center justify-between gap-2 mt-1">
-                  <button @click="showSettings = true" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-all" title="AI System Settings">
-                    <Icon name="heroicons:cog-6-tooth" class="w-4 h-4" />
-                  </button>
-                  <div class="flex items-center gap-2">
-                    <button 
-                      v-if="isAILoading"
-                      @click="handleCancelAI"
-                      class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
-                    >
-                      <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
-                      <span>Cancel</span>
-                    </button>
+                    <textarea 
+                      v-model="aiPrompt"
+                      @keydown.enter.exact.prevent="handleAISubmit"
+                      :disabled="isAILoading"
+                      placeholder="Instruction..."
+                      class="w-full h-28 bg-gray-50/50 dark:bg-gray-950/50 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none disabled:opacity-50"
+                    ></textarea>
+
+                    <div class="flex items-center gap-3">
+                      <USelectMenu 
+                        v-model="selectedModel" 
+                        :items="modelOptions" 
+                        value-key="id"
+                        class="flex-1"
+                        :ui="{ 
+                          base: 'bg-white dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-800 h-10',
+                          content: 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl rounded-2xl'
+                        }"
+                        :popper="{ zIndex: 10001, strategy: 'fixed' }"
+                      />
+                    </div>
+
                     <button 
                       @click="handleAISubmit"
                       :disabled="isAILoading || !aiPrompt"
-                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50 flex items-center gap-2"
+                      class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-bold uppercase shadow-xl shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                      <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
+                      <Icon v-else name="heroicons:bolt" class="w-4 h-4" />
+                      <span>{{ isAILoading ? 'Syncing...' : 'Magic Sync' }}</span>
                     </button>
                   </div>
-                </div>
-              </div>
+                </template>
+              </UPopover>
             </div>
             
             <div class="relative ml-1">
@@ -303,6 +288,8 @@
             </div>
           </template>
           
+          <SettingsModal v-model="showSettings" />
+
           <div v-if="fullScreenStore.isEditorFullscreen" class="w-[1px] h-3 bg-gray-200 dark:bg-gray-800 mx-1"></div>
           
           <button v-if="fullScreenStore.isEditorFullscreen" @click="handleSwitchToOutput"
@@ -400,10 +387,7 @@ const showAIPopup = ref(false)
 const aiPrompt = ref('')
 const selectedModel = ref<ModelId>(DEFAULT_MODEL)
 const isAILoading = ref(false)
-const isEditMode = ref(!!editorStore.htmlCode)
-watch(() => editorStore.htmlCode, (val) => {
-  if (!val) isEditMode.value = false
-})
+const isEditMode = computed(() => !!editorStore.htmlCode)
 const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
 const showSettings = ref(false)
