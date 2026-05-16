@@ -1,5 +1,4 @@
-import * as trigger from "@trigger.dev/sdk/v3";
-const { task, streams } = trigger as any;
+import { task, streams } from "@trigger.dev/sdk/v3";
 import { OpenRouter } from '@openrouter/sdk'
 
 import { SYSTEM_PROMPT } from "../shared/prompt";
@@ -18,13 +17,7 @@ export const aiGenerateTask = task({
     maxAttempts: 3,
     minTimeoutInMs: 2000,
     maxTimeoutInMs: 10000,
-    factor: 2,
-    // Retry on rate limits, network issues, or timeouts
-    shouldRetry: (error: any) => {
-      const isRateLimited = error.status === 429 || error.code === 429 || error.message?.includes('429');
-      const isTimeout = error.status === 408 || error.code === 'ETIMEDOUT' || error.message?.toLowerCase().includes('timeout');
-      return isRateLimited || isTimeout;
-    }
+    factor: 2
   },
   maxDuration: 3600, // Maximum allowed duration (1 hour)
   run: async (payload: AIGenPayload) => {
@@ -101,20 +94,22 @@ REMINDER: Output ONLY raw code. No markdown code blocks.`
         const content = chunk.choices?.[0]?.delta?.content;
 
         if (reasoning) {
+          console.log(`[AI Task] Appending reasoning (${reasoning.length} chars)`);
           await streams.append("ai-reasoning", reasoning);
         }
 
         if (content) {
           if (!hasStartedCode) {
+            console.log(`[AI Task] First code chunk received`);
             hasStartedCode = true;
           }
           accumulated += content;
           
           // Publish the chunk to the Trigger.dev stream
-          // We use 'ai-output' as the stream key
           await streams.append("ai-output", content);
         }
       }
+      console.log(`[AI Task] Stream finished. Total length: ${accumulated.length}`);
 
       // Clean up markdown blocks if the AI ignored instructions
       const cleaned = accumulated.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');

@@ -480,9 +480,7 @@ const handleAISubmit = async () => {
       currentRunId.value = runId
       
       // Configure the SDK with the public token for this session
-      const sdk = await import("@trigger.dev/sdk/v3")
-      const { runs, auth } = sdk
-      const streams = (sdk as any).streams
+      const { runs, auth, streams } = await import("@trigger.dev/sdk/v3")
 
       aiStatusText.value = 'Initializing...'
 
@@ -490,34 +488,31 @@ const handleAISubmit = async () => {
         let accumulatedCode = ''
         
         await auth.withAuth({ accessToken: publicToken }, async () => {
+          console.log('Authentication successful, starting streams for:', runId)
+          
           // Start reading the reasoning stream
           const reasoningStreamPromise = (async () => {
             try {
-              console.log('Starting reasoning stream for:', runId)
-              const stream = await streams.read(runId, "ai-reasoning", { timeoutInSeconds: 3600 })
+              console.log('Reading reasoning stream for:', runId)
+              const stream = await streams.read(runId, "ai-reasoning", { timeoutInSeconds: 600 })
               for await (const chunk of stream) {
-                if (signal.aborted) {
-                  console.log('Reasoning stream aborted')
-                  break
-                }
+                if (signal.aborted) break
                 aiReasoning.value += chunk
               }
+              console.log('Reasoning stream finished')
             } catch (err) {
               console.error("Error reading reasoning stream:", err)
             }
           })()
 
-          // Start reading the code stream in parallel to the run subscription
-          const streamPromise = (async () => {
+          // Start reading the code stream
+          const outputStreamPromise = (async () => {
             try {
-              console.log('Starting output stream for:', runId)
-              const stream = await streams.read(runId, "ai-output", { timeoutInSeconds: 3600 })
+              console.log('Reading output stream for:', runId)
+              const stream = await streams.read(runId, "ai-output", { timeoutInSeconds: 600 })
               let hasStarted = false
               for await (const chunk of stream) {
-                if (signal.aborted) {
-                  console.log('Output stream aborted')
-                  break
-                }
+                if (signal.aborted) break
                 
                 if (!hasStarted) {
                   hasStarted = true
@@ -533,29 +528,44 @@ const handleAISubmit = async () => {
                 }
                 editorStore.setHtmlCode(displayCode)
               }
+              console.log('Output stream finished')
             } catch (err) {
               console.error("Error reading output stream:", err)
             }
           })()
 
-          // This is an Async Iterator that yields updates via WebSockets
-          for await (const run of runs.subscribeToRun(runId)) {
-            console.log('Run status update:', run.status)
-            aiStatusText.value = run.status || 'Thinking...'
+          // Subscribe to run updates
+          const runSubscriptionPromise = (async () => {
+            try {
+              for await (const run of runs.subscribeToRun(runId)) {
+                console.log('Run status update:', run.status)
+                aiStatusText.value = run.status || 'Thinking...'
 
-            if (run.status === 'COMPLETED') {
-              console.log('Run completed:', runId)
-              const finalCode = (run.output as any)?.code
-              if (finalCode) {
-                editorStore.setHtmlCode(finalCode)
+                if (run.status === 'COMPLETED') {
+                  console.log('Run completed successfully')
+                  const finalCode = (run.output as any)?.code
+                  if (finalCode) {
+                    editorStore.setHtmlCode(finalCode)
+                  }
+                  break 
+                } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
+                  throw new Error(`Task failed with status: ${run.status}`)
+                }
+                
+                if (signal.aborted) break
               }
-              break 
-            } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
-              throw new Error(`Task failed with status: ${run.status}`)
+            } catch (err) {
+              console.error("Error in run subscription:", err)
+              throw err
             }
-            
-            if (signal.aborted) break
-          }
+          })()
+
+          // Wait for everything to finish
+          await Promise.all([
+            reasoningStreamPromise,
+            outputStreamPromise,
+            runSubscriptionPromise
+          ])
         });
       } catch (err: any) {
         if (err.message?.includes('429') || err.message?.toLowerCase().includes('rate-limited')) {
