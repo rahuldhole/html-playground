@@ -18,11 +18,14 @@ export const aiGenerateTask = task({
     minTimeoutInMs: 2000,
     maxTimeoutInMs: 10000,
     factor: 2,
-    // Only retry on rate limits or network issues
+    // Retry on rate limits, network issues, or timeouts
     shouldRetry: (error: any) => {
-      return error.status === 429 || error.code === 429 || error.message?.includes('429');
+      const isRateLimited = error.status === 429 || error.code === 429 || error.message?.includes('429');
+      const isTimeout = error.status === 408 || error.code === 'ETIMEDOUT' || error.message?.toLowerCase().includes('timeout');
+      return isRateLimited || isTimeout;
     }
   },
+  maxDuration: 3600, // Maximum allowed duration (1 hour)
   run: async (payload: AIGenPayload) => {
     const { prompt, code, apiKey, model } = payload;
 

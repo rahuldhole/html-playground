@@ -434,7 +434,7 @@ const handleAISubmit = async () => {
           const reasoningStreamPromise = (async () => {
             try {
               console.log('Starting reasoning stream for:', runId)
-              const stream = await streams.read(runId, "ai-reasoning")
+              const stream = await streams.read(runId, "ai-reasoning", { timeoutInSeconds: 3600 })
               for await (const chunk of stream) {
                 if (signal.aborted) {
                   console.log('Reasoning stream aborted')
@@ -451,7 +451,7 @@ const handleAISubmit = async () => {
           const streamPromise = (async () => {
             try {
               console.log('Starting output stream for:', runId)
-              const stream = await streams.read(runId, "ai-output")
+              const stream = await streams.read(runId, "ai-output", { timeoutInSeconds: 3600 })
               let hasStarted = false
               for await (const chunk of stream) {
                 if (signal.aborted) {

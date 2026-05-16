@@ -108,6 +108,11 @@ export default defineEventHandler(async (event) => {
 
     const responseStream = new ReadableStream({
       async start(controller) {
+        const timeoutId = setTimeout(() => {
+          console.error("Stream processing timed out after 2 minutes");
+          controller.close();
+        }, 120000); // 2 minute timeout for the whole stream
+
         try {
           for await (const chunk of stream) {
             const content = chunk.choices?.[0]?.delta?.content
@@ -131,6 +136,7 @@ export default defineEventHandler(async (event) => {
         } catch (e) {
           console.error("Stream processing error:", e)
         } finally {
+          clearTimeout(timeoutId);
           controller.close()
         }
       }
