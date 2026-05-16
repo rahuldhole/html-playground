@@ -67,13 +67,6 @@ const handleIframeLoad = () => {
   if (!outputFrame.value) return
   const iframeDocument = outputFrame.value.contentDocument || outputFrame.value.contentWindow?.document
   if (!iframeDocument) return
-  const body = iframeDocument.body
-  if (!body) return
-  body.style.margin = '0'
-  body.style.padding = '0'
-  
-  // Force light color scheme for the iframe content to avoid system dark mode interference
-  body.style.colorScheme = 'light'
   
   iframeDocument.addEventListener('keydown', handleKeydown)
 }
@@ -86,19 +79,19 @@ const handleIframeError = () => {
   <div class="bg-white min-h-screen">
     <ClientOnly>
       <Welcome v-if="!code && !run" />
-      <div v-else class="bg-white">
+      <div v-else>
         <iframe
           ref="outputFrame"
           :src="blobUrl"
-          class="w-full h-screen border-none bg-white"
+          class="fixed inset-0 w-full h-full border-none bg-white z-10"
           sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
           @load="handleIframeLoad"
           @error="handleIframeError"
         ></iframe>
-        <div v-if="iframeError" class="text-red-600 text-center mt-4">
+        <div v-if="iframeError" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100000] bg-red-50 text-red-600 px-4 py-2 rounded-lg shadow-lg border border-red-200">
           An error occurred while loading the content.
         </div>
-        <div v-if="showButtons" class="fixed bottom-8 right-8 z-[99999] flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-2xl border border-gray-200/50 transition-all duration-300 hover:shadow-indigo-500/10 ring-1 ring-black/5">
+        <div v-if="showButtons" class="fixed bottom-8 right-8 z-[100000] flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-2xl border border-gray-200/50 transition-all duration-300 hover:shadow-indigo-500/10 ring-1 ring-black/5">
           <button @click="openInNewTab(blobUrl)" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors group">
             <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             <span>Run in sandbox</span>
