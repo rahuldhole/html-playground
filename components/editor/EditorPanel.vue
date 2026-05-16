@@ -301,7 +301,7 @@
       
       <!-- Right Actions -->
       <div class="flex items-center gap-1.5">
-        <button @click="isDarkMode = !isDarkMode"
+        <button @click="toggleGlobalTheme"
           class="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
           title="Toggle Dark Mode">
           <Icon :name="isDarkMode ? 'heroicons:sun' : 'heroicons:moon'" class="w-4 h-4" />
@@ -831,12 +831,21 @@ const handleSwitchToOutput = async () => {
 
 // Color mode
 const colorMode = useColorMode()
-const isDarkMode = computed({
-  get: () => colorMode.value === 'dark',
-  set: (value) => {
-    colorMode.preference = value ? 'dark' : 'light'
+const isDarkMode = computed(() => colorMode.value === 'dark')
+
+const toggleGlobalTheme = () => {
+  const newTheme = colorMode.value === 'dark' ? 'light' : 'dark'
+  colorMode.preference = newTheme
+  
+  // Explicitly toggle the .dark class to guarantee the main.css variables apply instantly
+  if (process.client) {
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
   }
-})
+}
 
 // Directly connect to the liveRun property in the store
 const liveRun = computed({

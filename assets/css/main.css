@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark-mode, .dark *, .dark-mode *));
+
+/* Map custom CSS variables to Tailwind utility classes */
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-bg-app: var(--bg-app);
+  --color-bg-card: var(--bg-card);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-color: var(--border-color);
+}
 :root {
   --primary: #6366f1;
   --primary-hover: #4f46e5;
@@ -10,7 +23,7 @@
   --border-color: #e2e8f0;
 }
 
-.dark {
+.dark, .dark-mode {
   --primary: #818cf8;
   --primary-hover: #6366f1;
   --bg-app: #020617;
@@ -53,7 +66,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.dark .glass {
+.dark .glass, .dark-mode .glass {
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
