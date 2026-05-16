@@ -26,6 +26,12 @@ const handleReset = () => {
   }
 }
 
+const handleClear = () => {
+  if (confirm('Are you sure you want to clear the system prompt?')) {
+    localPrompt.value = ''
+  }
+}
+
 const handleClose = () => {
   localPrompt.value = editorStore.systemPrompt
   emit('update:modelValue', false)
@@ -62,7 +68,10 @@ const handleClose = () => {
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <label class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">System Prompt</label>
-                <button @click="handleReset" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Reset to Default</button>
+                <div class="flex gap-4">
+                  <button @click="handleClear" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline transition-all">Clear Prompt</button>
+                  <button @click="handleReset" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline transition-all">Reset to Default</button>
+                </div>
               </div>
               <div class="relative group">
                 <textarea 
