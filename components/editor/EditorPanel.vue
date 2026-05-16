@@ -31,6 +31,9 @@
               
               <!-- AI Prompt Popup -->
               <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50 overflow-hidden">
+                <!-- Settings Modal -->
+                <SettingsModal v-model="showSettings" />
+
                 <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" class="mb-3 p-2 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100/50 dark:border-indigo-800/50 max-h-32 overflow-y-auto custom-scrollbar">
                   <div class="flex items-center gap-2 mb-1 sticky top-0 bg-transparent">
                     <Icon name="heroicons:light-bulb" class="w-3 h-3 text-indigo-500 animate-pulse" />
@@ -42,7 +45,9 @@
                 </div>
 
                 <div class="mb-2">
-                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
+                  <div class="mb-1">
+                    <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 block">What should AI do?</label>
+                  </div>
                   <textarea 
                     ref="aiInput"
                     v-model="aiPrompt"
@@ -82,23 +87,28 @@
                     </button>
                   </div>
                 </div>
-                <div class="flex items-center justify-end gap-2">
-                  <button 
-                    v-if="isAILoading"
-                    @click="handleCancelAI"
-                    class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
-                  >
-                    <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
-                    <span>Cancel</span>
+                <div class="flex items-center justify-between gap-2 mt-1">
+                  <button @click="showSettings = true" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-all" title="AI System Settings">
+                    <Icon name="heroicons:cog-6-tooth" class="w-4 h-4" />
                   </button>
-                  <button 
-                    @click="handleAISubmit"
-                    :disabled="isAILoading || !aiPrompt"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                    <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      v-if="isAILoading"
+                      @click="handleCancelAI"
+                      class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
+                    >
+                      <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
+                      <span>Cancel</span>
+                    </button>
+                    <button 
+                      @click="handleAISubmit"
+                      :disabled="isAILoading || !aiPrompt"
+                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+                      <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -154,6 +164,9 @@
               
               <!-- AI Prompt Popup (Mobile specific adjustments) -->
               <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+                <!-- Settings Modal -->
+                <SettingsModal v-model="showSettings" />
+                
                 <div v-if="aiReasoning || (isAILoading && aiStatusText !== 'Thinking...')" class="mb-3 p-2 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100/50 dark:border-indigo-800/50 max-h-24 overflow-y-auto">
                   <div class="flex items-center gap-2 mb-1">
                     <Icon name="heroicons:light-bulb" class="w-3 h-3 text-indigo-500 animate-pulse" />
@@ -165,7 +178,9 @@
                 </div>
 
                 <div class="mb-2">
-                  <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1 block">What should AI do?</label>
+                  <div class="mb-1">
+                    <label class="text-[9px] font-bold uppercase text-gray-400 dark:text-gray-500 block">What should AI do?</label>
+                  </div>
                   <textarea 
                     ref="aiInputMobile"
                     v-model="aiPrompt"
@@ -194,23 +209,28 @@
                     </button>
                   </div>
                 </div>
-                <div class="flex items-center justify-end gap-2">
-                  <button 
-                    v-if="isAILoading"
-                    @click="handleCancelAI"
-                    class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
-                  >
-                    <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
-                    <span>Cancel</span>
+                <div class="flex items-center justify-between gap-2 mt-1">
+                  <button @click="showSettings = true" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-all" title="AI System Settings">
+                    <Icon name="heroicons:cog-6-tooth" class="w-4 h-4" />
                   </button>
-                  <button 
-                    @click="handleAISubmit"
-                    :disabled="isAILoading || !aiPrompt"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50 flex items-center gap-2"
-                  >
-                    <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-                    <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      v-if="isAILoading"
+                      @click="handleCancelAI"
+                      class="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5"
+                    >
+                      <Icon name="heroicons:x-mark" class="w-3.5 h-3.5" />
+                      <span>Cancel</span>
+                    </button>
+                    <button 
+                      @click="handleAISubmit"
+                      :disabled="isAILoading || !aiPrompt"
+                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Icon v-if="isAILoading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+                      <span>{{ isAILoading ? 'Processing...' : 'Generate Update' }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -347,6 +367,7 @@ const selectedModel = ref<ModelId>(DEFAULT_MODEL)
 const isAILoading = ref(false)
 const aiStatusText = ref('Thinking...')
 const aiReasoning = ref('')
+const showSettings = ref(false)
 const abortController = ref<AbortController | null>(null)
 const currentRunId = ref<string | null>(null)
 const userHasScrolledUp = ref(false)
@@ -402,7 +423,8 @@ const handleAISubmit = async () => {
       body: JSON.stringify({
         prompt: aiPrompt.value,
         code: editorStore.htmlCode,
-        model: selectedModel.value
+        model: selectedModel.value,
+        systemPrompt: editorStore.systemPrompt
       })
     })
 

@@ -2,13 +2,14 @@ import * as trigger from "@trigger.dev/sdk/v3";
 const { task, streams } = trigger as any;
 import { OpenRouter } from '@openrouter/sdk'
 
-import { SYSTEM_PROMPT } from "../server/utils/prompt";
+import { SYSTEM_PROMPT } from "../shared/prompt";
 
 export interface AIGenPayload {
   prompt: string;
   code: string;
   apiKey: string;
   model?: string;
+  systemPrompt?: string;
 }
 
 export const aiGenerateTask = task({
@@ -27,11 +28,13 @@ export const aiGenerateTask = task({
   },
   maxDuration: 3600, // Maximum allowed duration (1 hour)
   run: async (payload: AIGenPayload) => {
-    const { prompt, code, apiKey, model } = payload;
+    const { prompt, code, apiKey, model, systemPrompt: customSystemPrompt } = payload;
 
     const sdk = new OpenRouter({
       apiKey: apiKey,
     });
+
+    const systemPrompt = customSystemPrompt || SYSTEM_PROMPT;
 
     const messages = [
       {
@@ -39,14 +42,26 @@ export const aiGenerateTask = task({
         content: [
           {
             type: "text" as const,
-            text: SYSTEM_PROMPT,
+            text: systemPrompt,
             cache_control: { type: "ephemeral" as const }
           }
         ]
       },
       {
         role: "user" as const,
-        content: `Current Code:\n${code}\n\nUser Request: ${prompt}`
+        content: `### 📂 Context: Current Code in Editor
+${code ? code : "(Editor is empty - New Project)"}
+
+### 💡 User Request
+${prompt}
+
+### 🚀 Implementation Task
+Apply the request to the context above. 
+1. **Prioritize Libraries**: Check the preferred CDN list and use professional libraries (Swiper, Chart.js, GSAP, etc.) instead of writing custom vanilla code for complex features.
+2. **Use Mock APIs**: Use the provided API list (DummyJSON, etc.) for any data-driven features.
+3. **Elevate Design**: Ensure a complete, premium, and responsive product.
+
+REMINDER: Output ONLY raw code. No markdown code blocks.`
       }
     ];
 

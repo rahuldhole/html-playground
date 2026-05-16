@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
-
 import { LANDING_PAGE_HTML } from '../utils/landing'
+import { SYSTEM_PROMPT } from '~/shared/prompt'
 
 interface EditorState {
   htmlCode: string;
+  systemPrompt: string;
   liveRun: boolean;
   isOutputDark: boolean;
   isEditorFullscreen: boolean;
@@ -15,6 +16,7 @@ interface EditorState {
 export const useEditorStore = defineStore('editor', {
   state: (): EditorState => ({
     htmlCode: LANDING_PAGE_HTML,
+    systemPrompt: SYSTEM_PROMPT,
     liveRun: true,
     isOutputDark: false,
     isEditorFullscreen: false,
@@ -26,9 +28,16 @@ export const useEditorStore = defineStore('editor', {
     setHtmlCode(code: string) {
       this.htmlCode = code
     },
+    setSystemPrompt(prompt: string) {
+      this.systemPrompt = prompt
+    },
+    resetSystemPrompt() {
+      this.systemPrompt = SYSTEM_PROMPT
+    },
     setLiveRun(value: boolean) {
       this.liveRun = value
     },
+    // ... rest of the actions
     setOutputDark(value: boolean) {
       this.isOutputDark = value
     },
@@ -66,6 +75,6 @@ export const useEditorStore = defineStore('editor', {
   persist: {
     // @ts-ignore
     storage: piniaPluginPersistedstate.localStorage(),
-    pick: ['htmlCode', 'liveRun', 'isOutputDark'],
+    pick: ['htmlCode', 'liveRun', 'isOutputDark', 'systemPrompt'],
   },
 })

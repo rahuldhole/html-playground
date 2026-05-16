@@ -1,12 +1,14 @@
 import { tasks, auth, configure } from "@trigger.dev/sdk/v3"
 import { OpenRouter } from '@openrouter/sdk'
-import { SYSTEM_PROMPT } from '../utils/prompt'
+import { SYSTEM_PROMPT } from '../../shared/prompt'
 import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
-  const { prompt, code, model } = await readBody(event)
+  const { prompt, code, model, systemPrompt: customSystemPrompt } = await readBody(event)
   console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..." Model: ${model}`)
   const config = useRuntimeConfig()
+
+  const systemPrompt = customSystemPrompt || SYSTEM_PROMPT
 
   // Ensure Trigger.dev is configured if key is available
   if (config.triggerSecretKey) {
@@ -29,7 +31,8 @@ export default defineEventHandler(async (event) => {
         prompt,
         code,
         model,
-        apiKey: config.openRouterKey
+        apiKey: config.openRouterKey,
+        systemPrompt: systemPrompt
       })
 
       // Generate a temporary public token so the frontend can subscribe to this run via WebSockets
@@ -72,7 +75,19 @@ export default defineEventHandler(async (event) => {
     },
     {
       role: "user" as const,
-      content: `Current Code:\n${code}\n\nUser Request: ${prompt}`
+      content: `### 📂 Context: Current Code in Editor
+${code ? code : "(Editor is empty - New Project)"}
+
+### 💡 User Request
+${prompt}
+
+### 🚀 Implementation Task
+Apply the request to the context above. 
+1. **Prioritize Libraries**: Check the preferred CDN list and use professional libraries (Swiper, Chart.js, GSAP, etc.) instead of writing custom vanilla code for complex features.
+2. **Use Mock APIs**: Use the provided API list (DummyJSON, etc.) for any data-driven features.
+3. **Elevate Design**: Ensure a complete, premium, and responsive product.
+
+REMINDER: Output ONLY raw code. No markdown code blocks.`
     }
   ]
 
