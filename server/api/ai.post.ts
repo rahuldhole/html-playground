@@ -1,6 +1,6 @@
 import { tasks, auth, configure } from "@trigger.dev/sdk/v3"
 import { OpenRouter } from '@openrouter/sdk'
-import { SYSTEM_PROMPT, TECHNICAL_CONSTRAINTS } from '../../shared/prompt'
+import { TECHNICAL_CONSTRAINTS } from '../../shared/prompt'
 import type { aiGenerateTask } from "../../trigger/ai-gen"
 
 export default defineEventHandler(async (event) => {
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   console.log(`[AI Request] Prompt: "${prompt?.slice(0, 50)}..." Model: ${model}`)
   const config = useRuntimeConfig()
 
-  const systemPrompt = (customSystemPrompt || SYSTEM_PROMPT) + "\n\n" + TECHNICAL_CONSTRAINTS
+  const systemPrompt = (customSystemPrompt ? (customSystemPrompt + "\n\n") : "") + TECHNICAL_CONSTRAINTS
 
   // Ensure Trigger.dev is configured if key is available
   if (config.triggerSecretKey) {
