@@ -443,6 +443,11 @@ const handleCancelAI = async () => {
 }
 
 const applyDiffsToCode = (baseCode: string, diffStream: string, onStatus?: (status: string) => void) => {
+  if (!diffStream.includes('<<<<<<< SEARCH') && diffStream.length > 50) {
+    // If we're in edit mode but the AI isn't sending search blocks, fallback
+    return diffStream.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '');
+  }
+
   const blocks = diffStream.split('<<<<<<< SEARCH');
   let currentCode = baseCode;
   let hasFoundMatch = false;
@@ -455,17 +460,20 @@ const applyDiffsToCode = (baseCode: string, diffStream: string, onStatus?: (stat
       const rest = parts[1];
       
       if (searchPart !== undefined && rest !== undefined) {
-        const search = searchPart.trim();
+        // Strip only the leading/trailing newline from the markers, preserve interior whitespace
+        const search = searchPart.replace(/^\n/, '').replace(/\n$/, '');
+        
         if (rest.includes('>>>>>>> REPLACE')) {
-          const replacement = rest.split('>>>>>>> REPLACE')[0]?.trim();
+          const replacement = rest.split('>>>>>>> REPLACE')[0]?.replace(/^\n/, '').replace(/\n$/, '');
           if (replacement !== undefined && currentCode.includes(search)) {
             currentCode = currentCode.replace(search, replacement);
             hasFoundMatch = true;
           }
         } else {
           // Still writing the replacement for this block
-          const partialReplacement = rest.trim();
+          const partialReplacement = rest.replace(/^\n/, '');
           if (currentCode.includes(search)) {
+             // We use a temporary replace for the live preview
              currentCode = currentCode.replace(search, partialReplacement);
              hasFoundMatch = true;
           }
@@ -497,7 +505,7 @@ const handleAISubmit = async () => {
   const originalCode = editorStore.htmlCode
   
   try {
-    console.log('Initiating AI request...')
+    console.log('[AI Client] Initiating AI request with mode:', isEditMode.value ? 'edit' : 'full')
     const response = await fetch("/api/ai", {
       method: "POST",
       headers: {
@@ -574,6 +582,7 @@ const handleAISubmit = async () => {
                   showAIPopup.value = false
                   aiPrompt.value = ''
                 }
+                console.log(`[AI Client] Received chunk of length: ${chunk.length}`);
                 accumulatedCode += chunk
                 
                 let displayCode = accumulatedCode
@@ -605,10 +614,16 @@ const handleAISubmit = async () => {
                   if (finalCode) {
                     editorStore.setHtmlCode(finalCode)
                   }
+                  
+                  // Reset loading state immediately for UI feedback
+                  isAILoading.value = false
+                  aiStatusText.value = 'Ready'
+                  
                   // Give streams a second to finish then abort to break the Promise.all hang
-                  setTimeout(() => controller.abort(), 1500)
+                  setTimeout(() => controller.abort(), 1000)
                   break 
                 } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
+                  isAILoading.value = false
                   controller.abort()
                   throw new Error(`Task failed with status: ${run.status}`)
                 }

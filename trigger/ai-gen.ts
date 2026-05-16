@@ -1,7 +1,7 @@
 import { task, streams } from "@trigger.dev/sdk/v3";
 import { OpenRouter } from '@openrouter/sdk'
 
-import { TECHNICAL_CONSTRAINTS } from "../shared/prompt";
+import { TECHNICAL_CONSTRAINTS, EDIT_CONSTRAINTS } from "../shared/prompt";
 
 export interface AIGenPayload {
   prompt: string;
@@ -78,6 +78,8 @@ ${prompt}`
 
       let accumulated = '';
       let hasStartedCode = false;
+      let streamBuffer = '';
+      let lastAppendTime = Date.now();
       
       for await (const chunk of stream) {
         const reasoning = (chunk.choices?.[0]?.delta as any)?.reasoning_content;
@@ -94,11 +96,23 @@ ${prompt}`
             hasStartedCode = true;
           }
           accumulated += content;
+          streamBuffer += content;
           
-          // Publish the chunk to the Trigger.dev stream
-          await streams.append("ai-output", content);
+          // Buffer chunks to avoid overwhelming the client with too many small updates
+          // Send if buffer is large enough or enough time has passed
+          if (streamBuffer.length > 50 || (Date.now() - lastAppendTime > 200)) {
+            await streams.append("ai-output", streamBuffer);
+            streamBuffer = '';
+            lastAppendTime = Date.now();
+          }
         }
       }
+      
+      // Send any remaining buffer
+      if (streamBuffer.length > 0) {
+        await streams.append("ai-output", streamBuffer);
+      }
+      
       console.log(`[AI Task] Stream finished. Total length: ${accumulated.length}`);
 
       let finalCode = accumulated;
@@ -118,14 +132,15 @@ ${prompt}`
           const replacePart = parts[1];
           if (searchPart === undefined || replacePart === undefined) continue;
 
-          const search = searchPart.trim();
+          // Strip only the boundary newlines from markers
+          const search = searchPart.replace(/^\n/, '').replace(/\n$/, '');
           const replaceWithParts = replacePart.split('>>>>>>> REPLACE');
           if (replaceWithParts.length < 1) continue;
           
           const replacementPart = replaceWithParts[0];
           if (replacementPart === undefined) continue;
           
-          const replacement = replacementPart.trim();
+          const replacement = replacementPart.replace(/^\n/, '').replace(/\n$/, '');
           
           if (currentCode.includes(search)) {
             currentCode = currentCode.replace(search, replacement);
