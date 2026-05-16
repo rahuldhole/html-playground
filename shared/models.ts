@@ -6,12 +6,6 @@ export interface ModelInfo {
 }
 
 export const MODELS = {
-  DEEPSEEK_V4_FLASH: {
-    id: "deepseek/deepseek-v4-flash:free",
-    name: "DeepSeek V4 Flash",
-    description: "Ultra-fast and efficient",
-    icon: "lucide:gauge"
-  },
   COBUDDY: {
     id: "baidu/cobuddy:free",
     name: "CoBuddy",
@@ -30,6 +24,18 @@ export const MODELS = {
     description: "Excellent for complex reasoning",
     icon: "lucide:brain-circuit"
   },
+  GLM_45_AIR: {
+    id: "z-ai/glm-4.5-air:free",
+    name: "GLM 4.5 Air",
+    description: "Balanced performance and speed",
+    icon: "lucide:wind"
+  },
+  LAGUNA_M1: {
+    id: "poolside/laguna-m.1:free",
+    name: "Laguna M.1",
+    description: "Specialized for code generation",
+    icon: "lucide:code-2"
+  },
   GEMMA_31B: {
     id: "google/gemma-4-31b-it:free",
     name: "Gemma 31B",
@@ -42,23 +48,17 @@ export const MODELS = {
     description: "Fast Google model",
     icon: "simple-icons:google"
   },
-  GLM_45_AIR: {
-    id: "z-ai/glm-4.5-air:free",
-    name: "GLM 4.5 Air",
-    description: "Balanced performance and speed",
-    icon: "lucide:wind"
-  },
   GPT_OSS_120B: {
     id: "openai/gpt-oss-120b:free",
     name: "GPT OSS 120B",
     description: "Large scale open source model",
     icon: "simple-icons:openai"
   },
-  LAGUNA_M1: {
-    id: "poolside/laguna-m.1:free",
-    name: "Laguna M.1",
-    description: "Specialized for code generation",
-    icon: "lucide:code-2"
+  DEEPSEEK_V4_FLASH: {
+    id: "deepseek/deepseek-v4-flash:free",
+    name: "DeepSeek V4 Flash",
+    description: "Ultra-fast and efficient",
+    icon: "lucide:gauge"
   },
   NEMOTRON_120B: {
     id: "nvidia/nemotron-3-super-120b-a12b:free",
@@ -76,4 +76,4 @@ export const MODELS = {
 
 export type ModelKey = keyof typeof MODELS;
 export type ModelId = typeof MODELS[ModelKey]["id"];
-export const DEFAULT_MODEL = MODELS.DEEPSEEK_V4_FLASH.id;
+export const DEFAULT_MODEL = MODELS.COBUDDY.id;
