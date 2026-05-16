@@ -616,7 +616,8 @@ const handleAISubmit = async () => {
                 } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
                   isAILoading.value = false
                   controller.abort()
-                  throw new Error(`Task failed with status: ${run.status}`)
+                  const errorDetails = (run as any).error?.message || (run as any).error || (run as any).output?.error;
+                  throw new Error(errorDetails ? `Task failed: ${errorDetails}` : `Task failed with status: ${run.status}`)
                 }
                 
                 if (signal.aborted) break
@@ -629,11 +630,16 @@ const handleAISubmit = async () => {
           })()
 
           // Wait for everything to finish
-          await Promise.allSettled([
+          const results = await Promise.allSettled([
             reasoningStreamPromise,
             outputStreamPromise,
             runSubscriptionPromise
           ])
+
+          const failed = results.find(r => r.status === 'rejected') as PromiseRejectedResult | undefined
+          if (failed) {
+            throw failed.reason
+          }
           
           // Apply the authoritative final code AFTER all streams have stopped,
           // so no stale stream chunk can overwrite it
