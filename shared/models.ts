@@ -6,6 +6,12 @@ export interface ModelInfo {
 }
 
 export const MODELS = {
+  TRINITY_LARGE_THINKING: {
+    id: "arcee-ai/trinity-large-thinking:free",
+    name: "Trinity Large",
+    description: "Excellent for complex reasoning",
+    icon: "lucide:brain-circuit"
+  },
   COBUDDY: {
     id: "baidu/cobuddy:free",
     name: "CoBuddy",
@@ -17,12 +23,6 @@ export const MODELS = {
     name: "MiniMax M2.5",
     description: "High-performance model",
     icon: "lucide:zap"
-  },
-  TRINITY_LARGE_THINKING: {
-    id: "arcee-ai/trinity-large-thinking:free",
-    name: "Trinity Large",
-    description: "Excellent for complex reasoning",
-    icon: "lucide:brain-circuit"
   },
   GLM_45_AIR: {
     id: "z-ai/glm-4.5-air:free",
@@ -76,4 +76,4 @@ export const MODELS = {
 
 export type ModelKey = keyof typeof MODELS;
 export type ModelId = typeof MODELS[ModelKey]["id"];
-export const DEFAULT_MODEL = MODELS.COBUDDY.id;
+export const DEFAULT_MODEL = MODELS.TRINITY_LARGE_THINKING.id;
