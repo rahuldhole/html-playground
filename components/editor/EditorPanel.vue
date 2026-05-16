@@ -442,9 +442,10 @@ const handleCancelAI = async () => {
   aiStatusText.value = 'Thinking...'
 }
 
-const applyDiffsToCode = (baseCode: string, diffStream: string) => {
+const applyDiffsToCode = (baseCode: string, diffStream: string, onStatus?: (status: string) => void) => {
   const blocks = diffStream.split('<<<<<<< SEARCH');
   let currentCode = baseCode;
+  let hasFoundMatch = false;
   
   for (let i = 1; i < blocks.length; i++) {
     const block = blocks[i];
@@ -459,15 +460,19 @@ const applyDiffsToCode = (baseCode: string, diffStream: string) => {
           const replacement = rest.split('>>>>>>> REPLACE')[0]?.trim();
           if (replacement !== undefined && currentCode.includes(search)) {
             currentCode = currentCode.replace(search, replacement);
+            hasFoundMatch = true;
           }
         } else {
           // Still writing the replacement for this block
           const partialReplacement = rest.trim();
           if (currentCode.includes(search)) {
              currentCode = currentCode.replace(search, partialReplacement);
+             hasFoundMatch = true;
           }
         }
       }
+    } else if (block && onStatus && !hasFoundMatch) {
+       onStatus('Identifying lines to change...');
     }
   }
   return currentCode;
@@ -538,10 +543,13 @@ const handleAISubmit = async () => {
               console.log('Reading reasoning stream for:', runId)
               const stream = await streams.read(runId, "ai-reasoning", { timeoutInSeconds: 600 })
               for await (const chunk of stream) {
-                if (signal.aborted) break
+                if (signal.aborted) {
+                  console.log('[AI Client] Reasoning stream aborted');
+                  break
+                }
                 aiReasoning.value += chunk
               }
-              console.log('Reasoning stream finished')
+              console.log('[AI Client] Reasoning stream finished')
             } catch (err) {
               console.error("Error reading reasoning stream:", err)
             }
@@ -553,10 +561,15 @@ const handleAISubmit = async () => {
               console.log('Reading output stream for:', runId)
               const stream = await streams.read(runId, "ai-output", { timeoutInSeconds: 600 })
               let hasStarted = false
+              console.log('[AI Client] Output stream connected, waiting for chunks...');
               for await (const chunk of stream) {
-                if (signal.aborted) break
+                if (signal.aborted) {
+                  console.log('[AI Client] Output stream aborted');
+                  break
+                }
                 
                 if (!hasStarted) {
+                  console.log('[AI Client] First chunk received');
                   hasStarted = true
                   showAIPopup.value = false
                   aiPrompt.value = ''
@@ -565,13 +578,15 @@ const handleAISubmit = async () => {
                 
                 let displayCode = accumulatedCode
                 if (isEditMode.value) {
-                  displayCode = applyDiffsToCode(originalCode, accumulatedCode)
+                  displayCode = applyDiffsToCode(originalCode, accumulatedCode, (s) => {
+                    aiStatusText.value = s
+                  })
                 } else if (displayCode.includes('```')) {
                   displayCode = displayCode.replace(/```(?:html|css|js|javascript|vue|typescript|ts|jsx|tsx|json)?\n?/gi, '').replace(/```$/g, '')
                 }
                 editorStore.setHtmlCode(displayCode)
               }
-              console.log('Output stream finished')
+              console.log('[AI Client] Output stream finished')
             } catch (err) {
               console.error("Error reading output stream:", err)
             }
@@ -590,8 +605,11 @@ const handleAISubmit = async () => {
                   if (finalCode) {
                     editorStore.setHtmlCode(finalCode)
                   }
+                  // Give streams a second to finish then abort to break the Promise.all hang
+                  setTimeout(() => controller.abort(), 1500)
                   break 
                 } else if (['FAILED', 'CANCELED', 'CRASHED', 'SYSTEM_FAILURE', 'EXPIRED', 'TIMED_OUT'].includes(run.status)) {
+                  controller.abort()
                   throw new Error(`Task failed with status: ${run.status}`)
                 }
                 
@@ -599,6 +617,7 @@ const handleAISubmit = async () => {
               }
             } catch (err) {
               console.error("Error in run subscription:", err)
+              controller.abort()
               throw err
             }
           })()
@@ -649,7 +668,9 @@ const handleAISubmit = async () => {
           
           let displayCode = accumulatedCode
           if (isEditMode.value) {
-            displayCode = applyDiffsToCode(originalCode, accumulatedCode)
+            displayCode = applyDiffsToCode(originalCode, accumulatedCode, (s) => {
+              aiStatusText.value = s
+            })
           } else if (displayCode.startsWith('```')) {
               displayCode = displayCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '')
           }
