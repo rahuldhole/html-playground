@@ -77,14 +77,31 @@ export default defineEventHandler(async (event) => {
   ]
 
   try {
-    const stream = await sdk.chat.send({
-      appTitle: "Minimalist HTML IDE",
-      chatRequest: {
-        model: model || "openrouter/free",
-        messages: messages,
-        stream: true
+    let stream;
+    try {
+      stream = await sdk.chat.send({
+        appTitle: "Minimalist HTML IDE",
+        chatRequest: {
+          model: model || "openrouter/free",
+          messages: messages,
+          stream: true
+        }
+      })
+    } catch (error: any) {
+      if ((error.status === 429 || error.code === 429) && model && model !== "openrouter/free") {
+        console.log(`Model ${model} rate limited, falling back to openrouter/free`);
+        stream = await sdk.chat.send({
+          appTitle: "Minimalist HTML IDE",
+          chatRequest: {
+            model: "openrouter/free",
+            messages: messages,
+            stream: true
+          }
+        })
+      } else {
+        throw error;
       }
-    })
+    }
 
     let accumulated = ''
     let sentIndex = 0
@@ -129,11 +146,14 @@ export default defineEventHandler(async (event) => {
     return sendStream(event, responseStream)
   } catch (error: any) {
     console.error('OpenRouter SDK Error:', error.message)
+    const statusCode = error.status || error.code || 500
+    const message = statusCode === 429 
+      ? "AI model is temporarily rate-limited. Retrying in background..." 
+      : (error.message || 'Failed to connect to OpenRouter')
+      
     throw createError({
-      statusCode: 500,
-      statusMessage: error.message || 'Failed to connect to OpenRouter'
+      statusCode: statusCode,
+      statusMessage: message
     })
   }
 })
-
-

@@ -498,7 +498,11 @@ const handleAISubmit = async () => {
           }
         });
       } catch (err: any) {
-        alert(`AI Error: ${err.message}`)
+        if (err.message?.includes('429') || err.message?.toLowerCase().includes('rate-limited')) {
+          alert(`Rate Limited: The selected model is temporarily unavailable. Please try again in a few seconds or switch to a different model.`)
+        } else {
+          alert(`AI Error: ${err.message}`)
+        }
       } finally {
         isAILoading.value = false
         aiStatusText.value = 'Thinking...'
@@ -551,7 +555,10 @@ const handleAISubmit = async () => {
       return
     }
     console.error('AI Error:', error)
-    alert(`Error: ${error.message || 'Failed to connect to AI'}`)
+    const msg = (error.message?.includes('429') || error.message?.toLowerCase().includes('rate-limited'))
+      ? "Rate Limited: This model is busy. Try again soon or switch models."
+      : (error.message || 'Failed to connect to AI')
+    alert(`Error: ${msg}`)
     isAILoading.value = false
     aiStatusText.value = 'Thinking...'
     currentRunId.value = null

@@ -13,6 +13,16 @@ export interface AIGenPayload {
 
 export const aiGenerateTask = task({
   id: "ai-generate",
+  retry: {
+    maxAttempts: 3,
+    minTimeoutInMs: 2000,
+    maxTimeoutInMs: 10000,
+    factor: 2,
+    // Only retry on rate limits or network issues
+    shouldRetry: (error: any) => {
+      return error.status === 429 || error.code === 429 || error.message?.includes('429');
+    }
+  },
   run: async (payload: AIGenPayload) => {
     const { prompt, code, apiKey, model } = payload;
 
@@ -38,14 +48,32 @@ export const aiGenerateTask = task({
     ];
 
     try {
-      const stream = await sdk.chat.send({
-        appTitle: "Minimalist HTML IDE",
-        chatRequest: {
-          model: model || "openrouter/free", 
-          messages: messages,
-          stream: true
+      let stream;
+      try {
+        stream = await sdk.chat.send({
+          appTitle: "Minimalist HTML IDE",
+          chatRequest: {
+            model: model || "openrouter/free", 
+            messages: messages,
+            stream: true
+          }
+        });
+      } catch (error: any) {
+        // If rate limited and we weren't already using the fallback
+        if ((error.status === 429 || error.code === 429) && model && model !== "openrouter/free") {
+          console.log(`Model ${model} rate limited, falling back to openrouter/free`);
+          stream = await sdk.chat.send({
+            appTitle: "Minimalist HTML IDE",
+            chatRequest: {
+              model: "openrouter/free", 
+              messages: messages,
+              stream: true
+            }
+          });
+        } else {
+          throw error;
         }
-      });
+      }
 
       let accumulated = '';
       let hasStartedCode = false;
