@@ -2,7 +2,7 @@
   <div 
     v-if="modelValue" 
     ref="menuRef"
-    class="absolute top-full left-0 z-50 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 p-4 w-72 mt-2"
+    class="absolute top-full left-0 z-[110] bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 p-4 w-72 mt-2"
   >
     <div class="flex justify-between items-center mb-3">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Boilerplates</h3>

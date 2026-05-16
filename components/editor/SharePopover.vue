@@ -1,5 +1,5 @@
 <template>
-  <div v-if="modelValue" class="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 p-3 z-50 overflow-hidden transform origin-top-right transition-all">
+  <div v-if="modelValue" class="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 p-3 z-[110] transform origin-top-right transition-all">
     <div class="flex items-center justify-between mb-3 px-1">
       <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Share Project</span>
       <button @click="close" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">

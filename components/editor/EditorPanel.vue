@@ -1,7 +1,7 @@
 <template>
   <div id="editor-container" ref="container" class="flex flex-col h-full bg-card shadow-sm rounded-2xl border border-gray-200 dark:border-gray-800 transition-all duration-300 relative">
     <!-- Ultra Minimal Header -->
-    <div class="group/header relative z-[60] flex items-center justify-between px-2 md:px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950 rounded-t-2xl">
+    <div class="group/header relative z-[100] flex items-center justify-between px-2 md:px-4 h-10 bg-gray-50/30 dark:bg-gray-950/30 border-b border-gray-100 dark:border-gray-900 transition-colors hover:bg-gray-50 dark:hover:bg-gray-950 rounded-t-2xl">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] select-none">
           <Icon name="heroicons:code-bracket" class="w-3.5 h-3.5" />
@@ -30,7 +30,7 @@
               </button>
               
               <!-- AI Prompt Popup -->
-              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-72 md:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-[110]">
                 <!-- Settings Modal -->
                 <SettingsModal v-model="showSettings" />
 
@@ -70,7 +70,8 @@
                     :ui="{ 
                       base: 'bg-gray-50 dark:bg-gray-900 rounded-lg ring-0 border border-gray-100 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500'
                     }"
-                    :popper="{ zIndex: 100 }"
+                    :popper="{ zIndex: 9999, strategy: 'fixed' }"
+                    :portal="false"
                   >
                     <div class="flex items-center gap-2 min-w-0">
                       <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-md bg-indigo-600 text-white">
@@ -172,7 +173,7 @@
               </button>
               
               <!-- AI Prompt Popup (Mobile specific adjustments) -->
-              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-50">
+              <div v-if="showAIPopup" class="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 z-[110]">
                 <!-- Settings Modal -->
                 <SettingsModal v-model="showSettings" />
                 
@@ -211,7 +212,8 @@
                     :ui="{ 
                       base: 'bg-gray-50 dark:bg-gray-900 rounded-xl ring-0 border border-gray-100 dark:border-gray-700'
                     }"
-                    :popper="{ zIndex: 100 }"
+                    :popper="{ zIndex: 9999, strategy: 'fixed' }"
+                    :portal="false"
                   >
                     <div class="flex items-center gap-3">
                       <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-indigo-600 text-white">
