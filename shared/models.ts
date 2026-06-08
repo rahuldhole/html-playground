@@ -6,6 +6,12 @@ export interface ModelInfo {
 }
 
 export const MODELS = {
+  RANDOM: {
+    id: "openrouter/free",
+    name: "Random Model",
+    description: "Uses any available model",
+    icon: "lucide:shuffle"
+  },
   TRINITY_LARGE_THINKING: {
     id: "arcee-ai/trinity-large-thinking:free",
     name: "Trinity Large",
@@ -66,14 +72,8 @@ export const MODELS = {
     description: "NVIDIA's flagship open model",
     icon: "simple-icons:nvidia"
   },
-  RANDOM: {
-    id: "openrouter/free",
-    name: "Random Model",
-    description: "Uses any available model",
-    icon: "lucide:shuffle"
-  },
 } as const;
 
 export type ModelKey = keyof typeof MODELS;
 export type ModelId = typeof MODELS[ModelKey]["id"];
-export const DEFAULT_MODEL = MODELS.TRINITY_LARGE_THINKING.id;
+export const DEFAULT_MODEL = MODELS.RANDOM.id;

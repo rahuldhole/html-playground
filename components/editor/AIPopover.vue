@@ -15,10 +15,10 @@
 
     <!-- Custom Persistent Popover Content -->
     <div v-if="showAIPopup" 
-      class="absolute top-full left-0 mt-3 z-[1000] overflow-hidden"
+      class="absolute top-full left-0 mt-3 z-[9999] overflow-visible"
       :class="[
         isMobile 
-          ? 'fixed inset-x-4 top-20 bottom-auto mx-auto max-w-sm rounded-[1.5rem] shadow-2xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-gray-800 ring-1 ring-black/5 dark:ring-white/5'
+          ? 'fixed inset-x-4 top-20 bottom-auto mx-auto w-[calc(100vw-2rem)] max-w-sm rounded-[1.5rem] shadow-2xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-gray-800 ring-1 ring-black/5 dark:ring-white/5'
           : 'w-80 md:w-96 rounded-[1.5rem] shadow-2xl bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-gray-800 ring-1 ring-black/5 dark:ring-white/5'
       ]"
     >
@@ -91,9 +91,9 @@
               class="w-full"
               :ui="{ 
                 base: 'bg-white dark:bg-gray-950 rounded-xl border border-gray-100 dark:border-gray-800 h-10 transition-all hover:border-indigo-500/50',
-                content: 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl rounded-2xl'
+                content: 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl rounded-2xl z-[10001] max-h-64'
               }"
-              :popper="{ zIndex: 10001, strategy: 'fixed' }"
+              :content="{ side: 'bottom', sideOffset: 4, collisionPadding: 16, align: 'start' }"
             >
               <template #default>
                 <div class="flex items-center gap-2 px-3 py-2">
