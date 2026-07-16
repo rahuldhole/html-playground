@@ -44,6 +44,8 @@ export const BOILERPLATES = [
 
   // Utilities
   { id: 7, name: 'HTMX', category: 'Utilities', slug: 'htmx', description: 'AJAX with attributes', file: 'htmx.html', icon: 'https://htmx.org/favicon.svg' },
+  { id: 46, name: 'Clerk Auth', category: 'Utilities', slug: 'clerk-auth', description: 'User Authentication', file: 'clerk-auth.html', icon: 'https://cdn.worldvectorlogo.com/logos/clerk-2.svg' },
+  { id: 47, name: 'Stripe Elements', category: 'Utilities', slug: 'stripe-elements', description: 'Payments & Checkout', file: 'stripe-elements.html', icon: 'https://cdn.simpleicons.org/stripe' },
   { id: 8, name: 'Alpine.js', category: 'Utilities', slug: 'alpine', description: 'Lightweight framework', file: 'alpine.html', icon: 'https://cdn.simpleicons.org/alpinedotjs' },
   { id: 9, name: 'Stimulus', category: 'Utilities', slug: 'stimulus', description: 'HTML over the wire', file: 'stimulus.html', icon: 'https://cdn.simpleicons.org/stimulus' },
   { id: 10, name: 'Turbo', category: 'Utilities', slug: 'turbo', description: 'HTML over the wire', file: 'turbo.html', icon: 'https://cdn.simpleicons.org/turbo' },

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premium Addition App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  <body class="bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center min-h-screen font-sans p-4">
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full relative overflow-hidden">
+      <!-- Success State Overlay -->
+      <div id="success-overlay" class="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-500">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h2 class="text-3xl font-extrabold text-gray-800">Unlocked!</h2>
+        <p class="text-gray-500 mt-2">You successfully paid $1.00</p>
+        <div class="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 w-3/4 text-center">
+          <p class="text-sm text-indigo-400 font-bold uppercase tracking-widest mb-2">The Answer Is</p>
+          <div class="text-5xl font-black text-indigo-600">4</div>
+        </div>
+      </div>
+
+      <div class="text-center mb-8">
+        <div class="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">Premium App</div>
+        <h1 class="text-3xl font-extrabold text-gray-900">2 + 2 = ?</h1>
+        <p class="text-gray-500 mt-3 text-sm">Pay a highly reasonable fee of <strong>$1.00</strong> to unlock the mathematical mysteries of the universe.</p>
+      </div>
+
+      <form id="payment-form" class="space-y-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Credit Card</label>
+          <div id="card-element" class="p-4 border-2 border-gray-200 rounded-xl bg-gray-50 focus-within:border-indigo-500 focus-within:bg-white transition-colors"></div>
+          <div id="card-errors" role="alert" class="text-red-500 text-sm mt-2 font-medium"></div>
+        </div>
+
+        <button
+          id="submit-btn"
+          type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 flex justify-center items-center gap-2"
+        >
+          <span id="button-text">Pay $1.00 to Unlock</span>
+          <svg id="spinner" class="w-5 h-5 animate-spin hidden" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </button>
+      </form>
+    </div>
+
+    <script>
+      // Test publishable key from Stripe's public docs
+      const stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+      const elements = stripe.elements();
+
+      const card = elements.create('card', {
+        style: {
+          base: {
+            color: '#1f2937',
+            fontFamily: '"Inter", "Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': { color: '#9ca3af' }
+          },
+          invalid: { color: '#ef4444', iconColor: '#ef4444' }
+        }
+      });
+
+      card.mount('#card-element');
+
+      card.on('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        displayError.textContent = event.error ? event.error.message : '';
+      });
+
+      const form = document.getElementById('payment-form');
+      const submitBtn = document.getElementById('submit-btn');
+      const buttonText = document.getElementById('button-text');
+      const spinner = document.getElementById('spinner');
+      const overlay = document.getElementById('success-overlay');
+
+      form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // UI Loading state
+        submitBtn.disabled = true;
+        buttonText.textContent = 'Processing...';
+        spinner.classList.remove('hidden');
+
+        // Create a token to simulate the payment flow
+        const {token, error} = await stripe.createToken(card);
+
+        if (error) {
+          // Reset UI and show error
+          document.getElementById('card-errors').textContent = error.message;
+          submitBtn.disabled = false;
+          buttonText.textContent = 'Pay $1.00 to Unlock';
+          spinner.classList.add('hidden');
+        } else {
+          // Success! Simulate backend processing delay
+          setTimeout(() => {
+            overlay.classList.remove('hidden');
+            // Trigger reflow for transition
+            void overlay.offsetWidth;
+            overlay.classList.remove('opacity-0');
+          }, 600);
+        }
+      });
+    </script>
+  </body>
+</html>
