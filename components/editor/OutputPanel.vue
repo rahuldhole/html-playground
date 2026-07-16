@@ -104,13 +104,13 @@
           ref="iframe1" 
           class="absolute inset-0 w-full h-full border-none"
           :class="activeIframe === 1 ? 'z-10 opacity-100' : 'z-0 opacity-0'"
-          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
+          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
         />
         <iframe 
           ref="iframe2" 
           class="absolute inset-0 w-full h-full border-none"
           :class="activeIframe === 2 ? 'z-10 opacity-100' : 'z-0 opacity-0'"
-          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
+          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
         />
       </div>
       
@@ -413,8 +413,8 @@ const toggleOutputTheme = () => {
 
 const openInNewTab = async () => {
   const content = editorStore.htmlCode || '<h1>No content available</h1>'
-  const blob = new Blob([wrapHtml(content)], { type: 'text/html' })
-  window.open(URL.createObjectURL(blob), '_run')
+  localStorage.setItem('preview-code', wrapHtml(content))
+  window.open('/preview.html', '_blank')
 }
 
 const takeScreenshot = () => {

@@ -48,8 +48,10 @@ const blobUrl = computed(() => {
   }
 })
 
-const openInNewTab = (url: string) => {
-  const newWindow = window.open(url, '_run')
+const openInNewTab = () => {
+  const htmlContent = code.value || editorStore.htmlCode || '<h1>No content available</h1>'
+  localStorage.setItem('preview-code', htmlContent)
+  const newWindow = window.open('/preview.html', '_blank')
   if (newWindow) {
     newWindow.focus()
   } else {
@@ -84,7 +86,7 @@ const handleIframeError = () => {
           ref="outputFrame"
           :src="blobUrl"
           class="fixed inset-0 w-full h-full border-none bg-white z-10"
-          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms"
+          sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
           @load="handleIframeLoad"
           @error="handleIframeError"
         ></iframe>
@@ -92,7 +94,7 @@ const handleIframeError = () => {
           An error occurred while loading the content.
         </div>
         <div v-if="showButtons" class="fixed bottom-8 right-8 z-[100000] flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-2xl border border-gray-200/50 transition-all duration-300 hover:shadow-indigo-500/10 ring-1 ring-black/5">
-          <button @click="openInNewTab(blobUrl)" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors group">
+          <button @click="openInNewTab" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors group">
             <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             <span>Run in sandbox</span>
           </button>

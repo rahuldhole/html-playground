@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview</title>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const code = localStorage.getItem('preview-code');
+      if (code) {
+        document.open();
+        document.write(code);
+        document.close();
+      } else {
+        document.body.innerHTML = '<div style="font-family: sans-serif; padding: 2rem; text-align: center;"><h1>No content available</h1><p>Please run the code from the editor to view the preview.</p></div>';
+      }
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
