@@ -61,4 +61,7 @@ export const BOILERPLATES = [
   { id: 42, name: 'JSONPlaceholder', category: 'Mock APIs', slug: 'jsonplaceholder', description: 'Blog Posts & Comments', file: 'jsonplaceholder.html', icon: 'https://jsonplaceholder.typicode.com/favicon.ico' },
   { id: 44, name: 'DiceBear', category: 'Mock APIs', slug: 'dicebear', description: 'Avatar Generator', file: 'dicebear.html', icon: 'https://www.dicebear.com/favicon.ico' },
   { id: 45, name: 'RandomUser', category: 'Mock APIs', slug: 'randomuser', description: 'User Profile Directory', file: 'randomuser.html', icon: 'https://randomuser.me/favicon.ico' },
+
+  // AI
+  { id: 48, name: 'Browser AI', category: 'AI', slug: 'browser-ai', description: 'Client-side AI', file: 'browser-ai.html', icon: 'https://cdn.simpleicons.org/huggingface' }
 ];
