@@ -44,7 +44,7 @@ export const BOILERPLATES = [
 
   // Utilities
   { id: 7, name: 'HTMX', category: 'Utilities', slug: 'htmx', description: 'AJAX with attributes', file: 'htmx.html', icon: 'https://htmx.org/favicon.svg' },
-  { id: 46, name: 'Clerk Auth', category: 'Utilities', slug: 'clerk-auth', description: 'User Authentication', file: 'clerk-auth.html', icon: 'https://cdn.worldvectorlogo.com/logos/clerk-2.svg' },
+  { id: 46, name: 'Clerk Auth', category: 'Utilities', slug: 'clerk-auth', description: 'User Authentication', file: 'clerk-auth.html', icon: 'https://clerk.com/_next/image?url=%2Fv2%2Fdownloads%2Favatar-circle-primary-light.svg&w=3840&q=75&dpl=dpl_9tDNEXWTBErXbS8vwixs9FPnejE7' },
   { id: 47, name: 'Stripe Elements', category: 'Utilities', slug: 'stripe-elements', description: 'Payments & Checkout', file: 'stripe-elements.html', icon: 'https://cdn.simpleicons.org/stripe' },
   { id: 8, name: 'Alpine.js', category: 'Utilities', slug: 'alpine', description: 'Lightweight framework', file: 'alpine.html', icon: 'https://cdn.simpleicons.org/alpinedotjs' },
   { id: 9, name: 'Stimulus', category: 'Utilities', slug: 'stimulus', description: 'HTML over the wire', file: 'stimulus.html', icon: 'https://cdn.simpleicons.org/stimulus' },
@@ -55,7 +55,7 @@ export const BOILERPLATES = [
   { id: 19, name: 'CoffeeScript', category: 'Utilities', slug: 'coffeescript', description: 'CoffeeScript template', file: 'coffeescript.html', icon: 'https://cdn.simpleicons.org/coffeescript' },
   { id: 20, name: 'Underscore.js', category: 'Utilities', slug: 'underscore-js', description: 'Utility library', file: 'underscore-js.html', icon: 'https://underscorejs.org/favicon.ico' },
   { id: 16, name: 'Google Drive', category: 'Utilities', slug: 'google-drive', description: 'Drive API integration', file: 'google-drive.html', icon: 'https://cdn.simpleicons.org/googledrive' },
-  
+
   // Mock APIs
   { id: 41, name: 'DummyJSON', category: 'Mock APIs', slug: 'dummyjson', description: 'Product Catalog & Store', file: 'dummyjson.html', icon: 'https://dummyjson.com/favicon.ico' },
   { id: 42, name: 'JSONPlaceholder', category: 'Mock APIs', slug: 'jsonplaceholder', description: 'Blog Posts & Comments', file: 'jsonplaceholder.html', icon: 'https://jsonplaceholder.typicode.com/favicon.ico' },

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clerk Hello World</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- 1. Clerk UI bundle -->
+<script
+  defer
+  crossorigin="anonymous"
+  src="https://emerging-minnow-70.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript">
+</script>
+
+<!-- 2. Clerk core SDK -->
+<script
+  defer
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_ZW1lcmdpbmctbWlubm93LTcwLmNsZXJrLmFjY291bnRzLmRldiQ"
+  src="https://emerging-minnow-70.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+  type="text/javascript"
+  onload="initClerk()">
+</script>
+</head>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl text-center">
+
+    <div id="loading-state" class="py-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent mx-auto mb-4"></div>
+      <p class="text-sm text-slate-400">Loading Clerk Auth...</p>
+    </div>
+
+    <div id="signed-out" class="hidden space-y-6">
+      <h1 class="text-2xl font-extrabold text-white">Hello, please sign in</h1>
+      <div id="clerk-sign-in" class="flex justify-center min-h-[350px]"></div>
+    </div>
+
+    <div id="signed-in" class="hidden space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <h1 class="text-2xl font-extrabold text-white">Hello World!</h1>
+        <div id="clerk-user-button"></div>
+      </div>
+      <p class="text-slate-300">Welcome back, <span id="user-name" class="font-bold text-indigo-400"></span>!</p>
+      <button onclick="window.Clerk.signOut()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition-all">
+        Sign Out
+      </button>
+    </div>
+
+  </div>
+
+<script>
+  async function initClerk() {
+    try {
+      while (!window.Clerk) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      while (!window.__internal_ClerkUICtor) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      await window.Clerk.load({
+        ui: { ClerkUI: window.__internal_ClerkUICtor }
+      });
+
+      const updateUI = () => {
+        document.getElementById('loading-state').classList.add('hidden');
+        const user = window.Clerk.user;
+
+        if (user) {
+          document.getElementById('signed-out').classList.add('hidden');
+          document.getElementById('signed-in').classList.remove('hidden');
+          document.getElementById('user-name').textContent = user.firstName || user.username || 'User';
+
+          const userBtn = document.getElementById('clerk-user-button');
+          userBtn.innerHTML = '';
+          window.Clerk.mountUserButton(userBtn);
+        } else {
+          document.getElementById('signed-in').classList.add('hidden');
+          document.getElementById('signed-out').classList.remove('hidden');
+
+          const signInDiv = document.getElementById('clerk-sign-in');
+          signInDiv.innerHTML = '';
+          window.Clerk.mountSignIn(signInDiv);
+        }
+      };
+
+      updateUI();
+      window.Clerk.addListener(updateUI);
+
+    } catch (err) {
+      document.getElementById('loading-state').innerHTML = `
+        <p class="text-red-400 font-semibold">Error loading application</p>
+        <p class="text-xs text-slate-500 mt-2">${err.message}</p>
+      `;
+    }
+  }
+</script>
+</body>
+</html>
