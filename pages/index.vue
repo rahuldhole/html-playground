@@ -43,6 +43,7 @@ defineRouteRules({
 })
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useWindowSize } from '@vueuse/core'
+import { useEditorStore } from '~/stores/editor'
 
 const containerRef = ref<HTMLElement | null>(null)
 const splitPercent = ref(50)
@@ -50,6 +51,24 @@ const isResizing = ref(false)
 const { width } = useWindowSize()
 
 const isMobile = computed(() => width.value < 768)
+
+const route = useRoute()
+const editorStore = useEditorStore()
+
+onMounted(async () => {
+  const templateSlug = route.query.template as string
+  if (templateSlug) {
+    try {
+      const response = await fetch(`/boilerplates/${templateSlug}.html`)
+      if (response.ok) {
+        const htmlCode = await response.text()
+        editorStore.setHtmlCode(htmlCode)
+      }
+    } catch (e) {
+      console.error('Failed to load template:', e)
+    }
+  }
+})
 
 const startResize = (e: MouseEvent) => {
   isResizing.value = true
