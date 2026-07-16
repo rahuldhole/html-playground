@@ -347,23 +347,17 @@ const updateOutput = () => {
   
   if (!nextIframe) return
 
-  const blob = new Blob([fullHtml], { type: 'text/html' })
-  const url = URL.createObjectURL(blob)
+  // Use the same preview.html approach for internal iframes so they have a real origin
+  const url = `/preview.html?t=${Date.now()}`
+  localStorage.setItem('preview-code', fullHtml)
 
   // Track the current update to avoid race conditions
   const currentUpdateUrl = url
 
   const onLoad = () => {
     // Only swap if this is still the latest update
-    if (nextIframe.src === currentUpdateUrl) {
+    if (nextIframe.src.includes(currentUpdateUrl)) {
       activeIframe.value = nextIframeNum
-      
-      // Clean up previous blob URL after a short delay to ensure swap is smooth
-      if (lastBlobUrl.value) {
-        const oldUrl = lastBlobUrl.value
-        setTimeout(() => URL.revokeObjectURL(oldUrl), 1000)
-      }
-      lastBlobUrl.value = currentUpdateUrl
     }
     nextIframe.removeEventListener('load', onLoad)
   }

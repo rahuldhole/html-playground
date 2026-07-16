@@ -38,14 +38,12 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
-const blobUrl = computed(() => {
-  if (!process.client) return ''
-  const htmlContent = code.value || editorStore.htmlCode
-  try {
-    return URL.createObjectURL(new Blob([htmlContent], { type: 'text/html' }))
-  } catch (e) {
-    return ''
-  }
+const previewUrl = ref('')
+watchEffect(() => {
+  if (!process.client) return
+  const htmlContent = code.value || editorStore.htmlCode || '<h1>No content available</h1>'
+  localStorage.setItem('preview-code', htmlContent)
+  previewUrl.value = `/preview.html?t=${Date.now()}`
 })
 
 const openInNewTab = () => {
@@ -84,7 +82,7 @@ const handleIframeError = () => {
       <div v-else>
         <iframe
           ref="outputFrame"
-          :src="blobUrl"
+          :src="previewUrl"
           class="fixed inset-0 w-full h-full border-none bg-white z-10"
           sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
           @load="handleIframeLoad"
