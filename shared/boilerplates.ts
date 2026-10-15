@@ -63,5 +63,13 @@ export const BOILERPLATES = [
   { id: 45, name: 'RandomUser', category: 'Mock APIs', slug: 'randomuser', description: 'User Profile Directory', file: 'randomuser.html', icon: 'https://randomuser.me/favicon.ico' },
 
   // AI
-  { id: 48, name: 'Browser AI', category: 'AI', slug: 'browser-ai', description: 'Client-side AI', file: 'browser-ai.html', icon: 'https://cdn.simpleicons.org/huggingface' }
+  { id: 48, name: 'Browser AI', category: 'AI', slug: 'browser-ai', description: 'Client-side AI', file: 'browser-ai.html', icon: 'https://cdn.simpleicons.org/huggingface' },
+
+  // ESM & In-Browser Databases
+  { id: 49, name: 'esm.sh (No-Build)', category: 'Utilities', slug: 'esm-sh', description: 'Zero-build NPM via ESM CDN', file: 'esm-sh.html', icon: 'https://esm.sh/favicon.ico' },
+  { id: 50, name: 'Open Props', category: 'Styling', slug: 'open-props', description: 'CSS variables via esm.sh', file: 'open-props.html', icon: 'https://open-props.style/favicon.ico' },
+  { id: 51, name: 'Twind (JIT Tailwind)', category: 'Styling', slug: 'twind', description: 'On-the-fly Tailwind compiler', file: 'twind.html', icon: 'https://cdn.simpleicons.org/tailwindcss' },
+  { id: 52, name: 'OpenAPIClientAxios', category: 'Utilities', slug: 'openapi-client-axios', description: 'Dynamic client from OpenAPI spec', file: 'openapi-client-axios.html', icon: 'https://cdn.simpleicons.org/openapiinitiative' },
+  { id: 53, name: 'sql.js', category: 'Utilities', slug: 'sql-js', description: 'SQLite DB in browser WASM', file: 'sql-js.html', icon: 'https://cdn.simpleicons.org/sqlite' },
+  { id: 54, name: 'Tinbase (Mini Supabase)', category: 'Utilities', slug: 'tinbase', description: 'In-browser Postgres & Supabase', file: 'tinbase.html', icon: 'https://cdn.simpleicons.org/supabase' }
 ];

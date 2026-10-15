@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sql.js In-Browser SQLite Boilerplate</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 16px;
+      color: #334155;
+    }
+    .card {
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    button {
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-right: 8px;
+    }
+    button:hover {
+      background: #0369a1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+    }
+  </style>
+  <script type="module">
+    import initSqlJs from 'https://esm.sh/sql.js@1.15.0';
+
+    const statusEl = document.getElementById('status');
+    const tableContainer = document.getElementById('tableContainer');
+    const insertBtn = document.getElementById('insertBtn');
+
+    let db = null;
+
+    async function initDatabase() {
+      try {
+        statusEl.textContent = 'Loading SQLite WebAssembly via esm.sh...';
+        const SQL = await initSqlJs({
+          locateFile: file => `https://esm.sh/sql.js@1.15.0/dist/${file}`
+        });
+
+        db = new SQL.Database();
+        db.run('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, role TEXT);');
+        db.run("INSERT INTO users VALUES (1, 'Alice', 'Engineer'), (2, 'Bob', 'Designer');");
+        statusEl.textContent = 'SQLite in-browser database ready!';
+        renderUsers();
+      } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    function renderUsers() {
+      if (!db) return;
+      const res = db.exec('SELECT * FROM users;');
+      if (!res.length) {
+        tableContainer.innerHTML = '<p>No records found.</p>';
+        return;
+      }
+      const { columns, values } = res[0];
+      let html = '<table><thead><tr>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+      values.forEach(row => {
+        html += '<tr>' + row.map(v => `<td>${v}</td>`).join('') + '</tr>';
+      });
+      html += '</tbody></table>';
+      tableContainer.innerHTML = html;
+    }
+
+    insertBtn.addEventListener('click', () => {
+      if (!db) return;
+      const names = ['Charlie', 'Dana', 'Eve', 'Frank', 'Grace'];
+      const roles = ['PM', 'Architect', 'DevOps', 'Data Scientist'];
+      const name = names[Math.floor(Math.random() * names.length)];
+      const role = roles[Math.floor(Math.random() * roles.length)];
+      db.run('INSERT INTO users (name, role) VALUES (?, ?);', [name, role]);
+      renderUsers();
+    });
+
+    initDatabase();
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h2>🗄️ sql.js (In-Browser SQLite)</h2>
+    <p>Loaded via <code>esm.sh/sql.js</code>. Runs full SQLite engine directly inside browser WebAssembly with zero server required.</p>
+    <div style="margin-bottom: 12px;">
+      <button id="insertBtn">+ Add Random User</button>
+      <span id="status" style="font-size: 14px; color: #64748b;">Initializing...</span>
+    </div>
+    <div id="tableContainer"></div>
+  </div>
+</body>
+</html>

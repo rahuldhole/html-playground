@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Props Demo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-props@1.7.13/open-props.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-props@1.7.13/normalize.min.css">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg:      light-dark(var(--gray-1), var(--gray-12));
+      --card:    light-dark(#fff, var(--gray-11));
+      --text:    light-dark(var(--gray-9), var(--gray-1));
+      --muted:   light-dark(var(--gray-7), var(--gray-4));
+      --border:  light-dark(var(--gray-3), var(--gray-9));
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      margin: 0;
+      padding: var(--size-fluid-4);
+      display: grid;
+      place-items: center;
+    }
+
+    main {
+      width: min(100%, 720px);
+      display: grid;
+      gap: var(--size-5);
+    }
+
+    .hero {
+      background: var(--gradient-5);
+      color: #fff;
+      border-radius: var(--radius-4);
+      padding: var(--size-7) var(--size-6);
+      box-shadow: var(--shadow-5);
+      animation: var(--animation-slide-in-up) forwards, var(--animation-fade-in);
+      display: grid;
+      gap: var(--size-2);
+    }
+    .hero h1 { font-size: var(--font-size-fluid-3); margin: 0; }
+    .hero p  { margin: 0; opacity: .9; max-inline-size: 48ch; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-3);
+      padding: var(--size-5);
+      box-shadow: var(--shadow-2);
+      display: grid;
+      gap: var(--size-3);
+    }
+    .card h2 { font-size: var(--font-size-3); margin: 0; }
+    .card p  { color: var(--muted); margin: 0; }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: var(--size-2);
+    }
+    .swatch {
+      border-radius: var(--radius-2);
+      padding: var(--size-3);
+      color: #fff;
+      font-size: var(--font-size-0);
+      font-weight: var(--font-weight-7);
+      text-transform: capitalize;
+      background: linear-gradient(135deg, var(--c5), var(--c8));
+      transition: transform .25s var(--ease-spring-3);
+    }
+    .swatch:hover { transform: scale(1.08) rotate(-2deg); }
+
+    .shadows {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: var(--size-4);
+    }
+    .shadow-box {
+      background: var(--card);
+      border-radius: var(--radius-2);
+      padding: var(--size-4) var(--size-2);
+      text-align: center;
+      font-size: var(--font-size-0);
+      color: var(--muted);
+    }
+
+    .anims { display: flex; gap: var(--size-3); flex-wrap: wrap; }
+    .dot {
+      inline-size: var(--size-8);
+      block-size: var(--size-8);
+      border-radius: var(--radius-round);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: var(--font-size-00);
+      font-weight: var(--font-weight-7);
+    }
+
+    button {
+      justify-self: start;
+      background: var(--indigo-7);
+      color: #fff;
+      border: 0;
+      border-radius: var(--radius-round);
+      padding: var(--size-2) var(--size-4);
+      font-weight: var(--font-weight-6);
+      box-shadow: var(--shadow-3);
+      cursor: pointer;
+      transition: transform .2s var(--ease-spring-2), background .2s;
+    }
+    button:hover  { background: var(--indigo-8); transform: translateY(-2px); }
+    button:active { transform: translateY(0) scale(.97); }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Open Props</h1>
+      <p>Design tokens as CSS variables: color, gradients, shadows, easing, and animation.</p>
+    </section>
+
+    <section class="card">
+      <h2>Color palette</h2>
+      <div class="swatches" id="swatches"></div>
+    </section>
+
+    <section class="card">
+      <h2>Shadows</h2>
+      <div class="shadows">
+        <div class="shadow-box" style="box-shadow:var(--shadow-1)">shadow-1</div>
+        <div class="shadow-box" style="box-shadow:var(--shadow-3)">shadow-3</div>
+        <div class="shadow-box" style="box-shadow:var(--shadow-5)">shadow-5</div>
+        <div class="shadow-box" style="box-shadow:var(--shadow-6)">shadow-6</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Animations</h2>
+      <div class="anims">
+        <div class="dot" style="background:var(--pink-6);animation:var(--animation-bounce) infinite">bounce</div>
+        <div class="dot" style="background:var(--teal-6);animation:var(--animation-pulse) infinite">pulse</div>
+        <div class="dot" style="background:var(--orange-6);animation:var(--animation-spin) infinite;animation-duration:3s">spin</div>
+        <div class="dot" style="background:var(--violet-6);animation:var(--animation-shake-x) infinite;animation-duration:2s">shake</div>
+      </div>
+    </section>
+
+    <button id="theme">Toggle theme</button>
+  </main>
+
+  <script>
+    const hues = ['red','pink','grape','violet','indigo','blue','cyan','teal','green','lime','yellow','orange'];
+    document.getElementById('swatches').innerHTML = hues.map(h =>
+      `<div class="swatch" style="--c5:var(--${h}-5);--c8:var(--${h}-8)">${h}</div>`
+    ).join('');
+
+    const root = document.documentElement;
+    document.getElementById('theme').onclick = () => {
+      const dark = getComputedStyle(root).colorScheme.includes('dark') && root.style.colorScheme !== 'light';
+      root.style.colorScheme = dark ? 'light' : 'dark';
+    };
+  </script>
+</body>
+</html>

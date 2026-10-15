@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tinbase In-Browser Supabase Boilerplate</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 620px;
+      margin: 40px auto;
+      padding: 0 16px;
+      color: #0f172a;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      background: #ffffff;
+    }
+    .tag {
+      background: #ecfdf5;
+      color: #059669;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #059669;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f8fafc;
+    }
+  </style>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+    import { createBackend, createPgmemEngine } from 'https://esm.sh/tinbase@0.19.0';
+
+    const statusEl = document.getElementById('status');
+    const addBtn = document.getElementById('addBtn');
+    const tableContainer = document.getElementById('tableContainer');
+
+    let supabase = null;
+
+    async function initTinbase() {
+      try {
+        statusEl.textContent = 'Spinning up in-browser Postgres backend...';
+        
+        // In-memory Postgres engine inside the browser tab
+        const backend = await createBackend({
+          engine: await createPgmemEngine()
+        });
+
+        // Initialize Postgres table
+        await backend.db.query(`
+          CREATE TABLE IF NOT EXISTS notes (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        // Connect Supabase client with custom fetch to Tinbase
+        supabase = createClient('http://localhost', backend.anonKey, {
+          global: {
+            fetch: (input, init) => backend.fetch(new Request(input, init))
+          }
+        });
+
+        // Seed sample note
+        await supabase.from('notes').insert([
+          { title: 'Welcome to in-browser mini Supabase!' },
+          { title: 'Zero network, pure local Postgres via WebAssembly/pgmem' }
+        ]);
+
+        statusEl.textContent = 'Tinbase Supabase engine ready!';
+        addBtn.disabled = false;
+        await refreshNotes();
+      } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    async function refreshNotes() {
+      if (!supabase) return;
+      const { data, error } = await supabase.from('notes').select('*').order('id', { ascending: true });
+      if (error) {
+        console.error(error);
+        return;
+      }
+      if (!data || data.length === 0) {
+        tableContainer.innerHTML = '<p>No notes yet.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>ID</th><th>Note Title</th></tr></thead><tbody>';
+      data.forEach(note => {
+        html += `<tr><td>${note.id}</td><td>${note.title}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      tableContainer.innerHTML = html;
+    }
+
+    addBtn.addEventListener('click', async () => {
+      if (!supabase) return;
+      const sampleNotes = [
+        'Reactive query with supabase-js',
+        'Testing local Postgres auth & queries',
+        'Running complete backend in single page',
+        'Offline-first full-stack prototype'
+      ];
+      const randomNote = sampleNotes[Math.floor(Math.random() * sampleNotes.length)] + ` (#${Math.floor(Math.random() * 1000)})`;
+      await supabase.from('notes').insert([{ title: randomNote }]);
+      await refreshNotes();
+    });
+
+    initTinbase();
+  </script>
+</head>
+<body>
+  <div class="card">
+    <span class="tag">Postgres in Browser</span>
+    <h2>⚡ Tinbase (Mini Supabase)</h2>
+    <p>Loaded via <code>esm.sh/tinbase</code> and <code>esm.sh/@supabase/supabase-js</code>. Full in-browser Postgres engine providing the Supabase API with zero external servers or network calls.</p>
+    <div style="margin: 12px 0;">
+      <button id="addBtn" disabled>+ Insert Supabase Row</button>
+      <span id="status" style="margin-left: 10px; font-size: 13px; color: #64748b;">Initializing...</span>
+    </div>
+    <div id="tableContainer"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAPIClientAxios Petstore Explorer</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#f8fafc, #0b1120);
+      --card: light-dark(#fff, #151e32);
+      --text: light-dark(#0f172a, #e2e8f0);
+      --muted: light-dark(#64748b, #94a3b8);
+      --border: light-dark(#e2e8f0, #263149);
+      --accent: #0284c7;
+      --ok: #16a34a; --warn: #d97706; --bad: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--text);
+           font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+    main { max-width: 900px; margin: 0 auto; display: grid; gap: 16px; }
+    h1 { margin: 0; font-size: 1.4rem; }
+    h2 { margin: 0 0 12px; font-size: 1rem; }
+    .sub { color: var(--muted); margin: 4px 0 0; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .grid2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+    select, input, button { font: inherit; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+                            background: var(--bg); color: var(--text); }
+    input { flex: 1; min-width: 120px; }
+    button { background: var(--accent); color: #fff; border: 0; cursor: pointer; font-weight: 500; }
+    button:hover:not(:disabled) { filter: brightness(1.1); }
+    button:disabled { opacity: .5; cursor: wait; }
+    button.ghost { background: transparent; color: var(--bad); border: 1px solid var(--border); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { font: 12px ui-monospace, monospace; padding: 2px 8px; border-radius: 999px;
+            background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+    .chip b { color: var(--accent); }
+
+    #pets { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .pet { text-align: left; background: var(--bg); color: var(--text); border: 1px solid var(--border);
+           padding: 10px 12px; display: grid; gap: 2px; }
+    .pet:hover { border-color: var(--accent); }
+    .pet small { color: var(--muted); }
+    .badge { justify-self: start; font-size: 11px; padding: 1px 8px; border-radius: 999px; color: #fff; }
+    .available { background: var(--ok); } .pending { background: var(--warn); } .sold { background: var(--bad); }
+
+    pre { margin: 0; padding: 12px; border-radius: 8px; background: #0f172a; color: #7dd3fc;
+          font-size: 12.5px; overflow: auto; max-height: 260px; white-space: pre-wrap; word-break: break-word; }
+    #log { max-height: 200px; overflow: auto; font: 12px ui-monospace, monospace; display: grid; gap: 2px; }
+    .ok { color: var(--ok); } .err { color: var(--bad); }
+    #status { color: var(--muted); min-height: 1.5em; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>📡 OpenAPIClientAxios Explorer</h1>
+    <p class="sub">Runtime client generated from the Petstore OpenAPI 3 spec. Every method below is created dynamically from <code>operationId</code>.</p>
+  </header>
+
+  <section class="card">
+    <h2>Operations discovered in spec</h2>
+    <div class="chips" id="ops"><span class="chip">loading spec…</span></div>
+  </section>
+
+  <section class="card">
+    <h2>findPetsByStatus</h2>
+    <div class="row">
+      <select id="statusSel">
+        <option>available</option><option>pending</option><option>sold</option>
+      </select>
+      <button id="loadBtn" disabled>Load pets</button>
+      <span id="status"></span>
+    </div>
+    <div id="pets" style="margin-top:12px"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>addPet / getPetById / deletePet</h2>
+      <form id="addForm" class="row">
+        <input id="petName" placeholder="New pet name" required maxlength="40">
+        <button id="addBtn" disabled>Add</button>
+      </form>
+      <div class="row" style="margin-top:8px">
+        <input id="petId" type="number" placeholder="Pet ID" min="1">
+        <button id="getBtn" disabled>Get</button>
+        <button id="delBtn" class="ghost" disabled>Delete</button>
+      </div>
+      <pre id="detail" style="margin-top:12px">// response appears here</pre>
+    </section>
+
+    <section class="card">
+      <h2>Request log (axios interceptors)</h2>
+      <div id="log"></div>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+  // ---------- load library (try several builds; esm.sh interop can break deps) ----------
+  const SOURCES = [
+    'https://esm.sh/openapi-client-axios@7?bundle',
+    'https://cdn.jsdelivr.net/npm/openapi-client-axios@7/+esm',
+    'https://esm.sh/openapi-client-axios@7',
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const BASE = 'https://petstore3.swagger.io/api/v3';
+
+  let api, client, lastErr;
+  for (const src of SOURCES) {
+    try {
+      const mod = await import(src);
+      const Ctor = mod.OpenAPIClientAxios ?? mod.default?.default ?? mod.default;
+      api = new Ctor({
+        definition: `${BASE}/openapi.json`,
+        axiosConfigDefaults: { baseURL: BASE },
+      });
+      client = await api.init();
+      console.info('openapi-client-axios loaded from', src);
+      break;
+    } catch (err) {
+      lastErr = err;
+      console.warn('Failed with', src, err);
+    }
+  }
+
+  const buttons = ['loadBtn', 'addBtn', 'getBtn', 'delBtn'].map($);
+  const setBusy = (busy) => buttons.forEach((b) => (b.disabled = busy));
+
+  // ---------- helpers ----------
+  function log(text, cls = '') {
+    const line = document.createElement('div');
+    line.className = cls;
+    line.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
+    $('log').prepend(line);
+  }
+
+  function show(data) {
+    $('detail').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  }
+
+  async function run(label, fn) {
+    setBusy(true);
+    $('status').textContent = `${label}…`;
+    try {
+      const result = await fn();
+      $('status').textContent = '';
+      return result;
+    } catch (err) {
+      const msg = err.response ? `${err.response.status} ${err.response.statusText || ''}` : err.message;
+      $('status').textContent = `Error: ${msg}`;
+      show(`Error: ${msg}`);
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function renderPets(pets) {
+    const wrap = $('pets');
+    wrap.replaceChildren();
+    if (!pets.length) { wrap.textContent = 'No pets found.'; return; }
+
+    for (const p of pets.slice(0, 24)) {
+      const btn = document.createElement('button');
+      btn.className = 'pet';
+      btn.type = 'button';
+
+      const name = document.createElement('strong');
+      name.textContent = p.name || '(unnamed)';
+      const meta = document.createElement('small');
+      meta.textContent = `#${p.id}${p.category?.name ? ' · ' + p.category.name : ''}`;
+      const badge = document.createElement('span');
+      badge.className = `badge ${p.status}`;
+      badge.textContent = p.status;
+
+      btn.append(name, meta, badge);
+      btn.addEventListener('click', () => { $('petId').value = p.id; show(p); });
+      wrap.append(btn);
+    }
+  }
+
+  // ---------- init ----------
+  if (!client) {
+    $('ops').textContent = `Failed to load spec: ${lastErr?.message}`;
+  } else {
+    client.interceptors.request.use((cfg) => { cfg.__t = performance.now(); return cfg; });
+    client.interceptors.response.use(
+      (res) => {
+        log(`${res.config.method.toUpperCase()} ${res.config.url} → ${res.status} (${Math.round(performance.now() - res.config.__t)}ms)`, 'ok');
+        return res;
+      },
+      (err) => {
+        log(`${err.config?.method?.toUpperCase()} ${err.config?.url} → ${err.response?.status ?? 'network error'}`, 'err');
+        return Promise.reject(err);
+      }
+    );
+
+    const ops = api.getOperations();
+    $('ops').replaceChildren(...ops.map((op) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      const m = document.createElement('b');
+      m.textContent = op.method.toUpperCase();
+      chip.append(m, ` ${op.operationId}`);
+      return chip;
+    }));
+
+    setBusy(false);
+    $('loadBtn').click();
+  }
+
+  // ---------- handlers ----------
+  $('loadBtn').addEventListener('click', async () => {
+    const res = await run('Loading', () => client.findPetsByStatus({ status: $('statusSel').value }));
+    if (res) renderPets(res.data);
+  });
+
+  $('addForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const res = await run('Adding', () =>
+      client.addPet(null, { name: $('petName').value.trim(), photoUrls: [], status: 'available' })
+    );
+    if (res) {
+      $('petId').value = res.data.id;
+      $('petName').value = '';
+      show(res.data);
+    }
+  });
+
+  $('getBtn').addEventListener('click', async () => {
+    const id = Number($('petId').value);
+    if (!id) return show('Enter a pet ID');
+    const res = await run('Fetching', () => client.getPetById({ petId: id }));
+    if (res) show(res.data);
+  });
+
+  $('delBtn').addEventListener('click', async () => {
+    const id = Number($('petId').value);
+    if (!id) return show('Enter a pet ID');
+    const res = await run('Deleting', () => client.deletePet({ petId: id }));
+    if (res) show(`Deleted pet #${id}`);
+  });
+</script>
+</body>
+</html>
